@@ -1,0 +1,673 @@
+-- Pengaturan awal (ubah ke false agar tidak aktif saat mulai)
+getgenv().autoThank = false
+getgenv().promoSpam = false
+
+-- Services
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+local VirtualUser = game:GetService("VirtualUser")
+local localPlayer = Players.LocalPlayer
+local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
+
+-- Anti-AFK
+local Players = game:GetService("Players")
+
+Players.LocalPlayer.Idled:Connect(function()
+	local vu = game:GetService("VirtualUser")
+	-- Ini hanya trigger untuk reset idle, tidak akan klik mouse
+	vu:CaptureController()
+	vu:ClickButton1(Vector2.new(0, 0))
+end)
+
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = localPlayer:WaitForChild("PlayerGui")
+ScreenGui.Name = "AutoGUI"
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 220, 0, 130)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -65)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local ThankButton = Instance.new("TextButton")
+ThankButton.Size = UDim2.new(0, 200, 0, 40)
+ThankButton.Position = UDim2.new(0, 10, 0, 10)
+ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ThankButton.TextColor3 = Color3.new(1, 1, 1)
+ThankButton.Parent = Frame
+
+local PromoButton = Instance.new("TextButton")
+PromoButton.Size = UDim2.new(0, 200, 0, 40)
+PromoButton.Position = UDim2.new(0, 10, 0, 60)
+PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+PromoButton.TextColor3 = Color3.new(1, 1, 1)
+PromoButton.Parent = Frame
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(0, 200, 0, 20)
+StatusLabel.Position = UDim2.new(0, 10, 0, 105)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.TextColor3 = Color3.new(1, 1, 1)
+StatusLabel.TextScaled = true
+StatusLabel.Parent = Frame
+
+-- Update GUI text sesuai status awal
+local function updateGUI()
+	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
+	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
+	StatusLabel.Text = "Status: Thank " .. (getgenv().autoThank and "ON" or "OFF") .. " / Promo " .. (getgenv().promoSpam and "ON" or "OFF")
+end
+
+updateGUI()
+
+-- Messages
+local thankMessages = {
+    "Thank you so much! With that donation, my avatar can finally stop eating imaginary noodles. Ramen is great, but air ramen? Not so much.",
+    "Whoa! Thanks for the Robux! Now I can finally buy that hat I absolutely don’t need but emotionally require.",
+    "Thanks! Your donation was so powerful, my booth just evolved into a slightly shinier version of itself. Like a Pokémon but broke.",
+    "Thank you! That donation saved my avatar from crying in a corner. It was getting soggy over there.",
+    "You donated?! Someone call NASA—I just experienced a happiness launch!",
+    "Thank you! I can now stop pretending to be AFK hoping someone feels bad for me.",
+    "Thanks a bunch! My wallet was emptier than my DMs. Now it’s... slightly less empty!",
+    "Thank you! I’ll now name my next pet rock after you. Rocky the Second appreciates your generosity.",
+    "That donation hit harder than a rage quit on the last level of an obby. Thank you!",
+    "Thanks! With that Robux, I’ll finally stop reusing the same outfit since 2021.",
+    "Appreciate the donation! You’re now the reason my avatar won’t be homeless. Spiritually speaking.",
+    "Thank you! Your donation was so nice, even my lag paused to clap.",
+    "Thanks a lot! You just bumped my booth's happiness rating from 'meh' to 'YEAH BOY!'",
+    "Thank you! That Robux is going directly into my 'Totally Responsible Purchases' fund. Step one: sparkly shades.",
+    "You're amazing! That donation just gave me enough power to survive one more server full of rich kids.",
+    "Thanks! Your Robux is being used for a greater cause: my fashion crisis.",
+    "Appreciate it! That donation brought tears to my eyes—and not just because I poked myself clicking thank-you too fast.",
+    "Thank you so much! My avatar’s been broke so long, it tried to tip YOU. Now we’re even.",
+    "Legendary move! That donation was smoother than a bacon hair on a skateboard.",
+    "You donated?! I just told my booth, and now it won't stop smiling. It's kind of freaking me out. But thank you!",
+    "Thank you! I’ll try not to waste this Robux on a banana hat. I said *try*.",
+    "Thanks a ton! My happiness just jumped higher than a noob on trampoline gear.",
+    "That was so generous! You just made my avatar do a cartwheel in spirit. Physics said 'no', but my heart said 'yes'.",
+    "Thank you! You’ve unlocked the 'Booth Owner Can Breathe Again' achievement. It's rare. Like ultra-rare.",
+    "You just made history: first donation of the day. My booth is putting this in its memoirs.",
+    "Thanks! That donation was hotter than lava in an obby—and a lot less deadly.",
+    "You dropped Robux? I dropped a tear. Balance has been restored. Thank you!",
+    "Thank you! Your donation just raised my booth’s self-esteem by 200%. It now thinks it’s a limited.",
+    "Thanks! With that, my avatar can now afford socks. Not shoes, but socks are a start!",
+    "That donation was so good, I almost forgave Roblox for deleting my last save. Almost.",
+    "Thank you! My booth has now entered its final form: Slightly Upgraded Begging Mode.",
+    "Thanks! If kindness were an accessory, you’d be wearing a Dominus right now.",
+    "Donation received! My avatar just bought confidence for the first time ever. Also maybe a rubber duck.",
+    "Appreciate it! That Robux is going straight into boosting my emotional stats.",
+    "Thank you! I’m currently crying happy tears into my keyboard. Hope it’s waterproof.",
+    "You donated?! Bro... you're officially cooler than anyone who ever camped a limited drop.",
+    "Thanks! That was more shocking than finding a working elevator in a free model game.",
+    "Thank you so much! You’ve been randomly selected as this booth’s MVP for eternity (or until someone donates more).",
+    "Thanks! Now my booth doesn't feel like a sad lemonade stand in winter.",
+    "That donation was so awesome, my avatar just proposed to a vending machine. Love is love. Thank you!",
+    "Thanks a bunch! You’ve now sponsored my next totally unnecessary dance animation.",
+    "You just donated?! Who hurt you? I mean—thank you, generous soul!",
+    "Thank you! My gratitude is currently buffering... still loading... oh look, a dance!",
+    "Appreciate you! Your donation just gave my booth emotional support it never knew it needed.",
+    "Thanks! My avatar just screamed internally from excitement. Outwardly, it’s still T-posing.",
+    "You, kind stranger, have done what many feared to do: press that beautiful, shiny ‘donate’ button. Thank you!",
+    "Thank you! That donation was more magical than a glitch that actually works in your favor.",
+    "Your donation was sweeter than a noob’s first visit to Adopt Me. You’re the best!",
+    "Wow, thanks! My avatar just started glitching from happiness. Might need a reset, but it’s worth it.",
+    "Thanks a lot! That was more refreshing than free admin in a roleplay game. Respect!",
+    "That donation just hit harder than my avatar’s fall off a 200 stud obby. But in a good way. Thank you!",
+    "Thanks! My avatar just unlocked emotional damage recovery. Stage one: smiling again.",
+    "Wow, that donation felt like a plot twist in a noob story. I didn’t see it coming—but I love it!",
+    "You’ve officially upgraded this booth from 'sad' to 'sassy'. Thank you!",
+    "Thanks! You just gave my booth a reason to believe in humanity again. Pixel by pixel.",
+    "Thanks! I told my pet rock about your donation and now it won’t stop spinning. You did this.",
+    "My avatar just screamed with joy... but silently, because it’s polite. Thank you!",
+    "Thank you! With that Robux, I can finally afford an outfit that matches. Fashion disaster averted!",
+    "Your donation just fixed my broken heart. Well, not really, but I did buy a heart-shaped balloon.",
+    "Thanks! I just gave your name to my NPC friend. He now worships you as the Donation God.",
+    "Thank you! My booth is now legally 10% cooler by Roblox law.",
+    "Thanks! That donation made me forget that I just failed another obby.",
+    "Wow! That was so generous, my avatar’s jaw dropped. Too bad it’s stuck that way now.",
+    "Thank you! I was gonna cry from joy, but then I realized I still have to pay booth rent. Still happy though!",
+    "You just turned this booth from ‘meh’ to ‘MVP’ with one click. Respect!",
+    "Thanks! I was gonna buy something dumb with this, but now I’ll buy something dumb with meaning.",
+    "You donated?! Quick, someone build a shrine! Wait—never mind. Out of bricks.",
+    "Thanks! You’ve unlocked my booth’s secret power: unstoppable gratitude.",
+    "That donation was so smooth, I thought it came with auto-tune. You rock!",
+    "Thank you! Your Robux just got accepted into the University of Good Decisions.",
+    "Thanks! My avatar’s happiness bar just filled up and overflowed onto my neighbor’s booth.",
+    "You donated? That deserves a handshake, a hug, and a questionable dance emote. Thank you!",
+    "Thank you! That Robux just saved my avatar from wearing the same outfit for the fifth year.",
+    "Appreciate it! That donation made me feel more complete than a puzzle with the last piece.",
+    "You donated? I’m officially renaming this booth after you. It’s now 'The Awesome Stand'.",
+    "Thanks! Your kindness has been downloaded successfully into my soul.",
+    "That donation was so smooth, even my lag stopped to admire it. Thank you!",
+    "Your generosity just turned this booth into a five-star attraction. According to me.",
+    "Thank you! You’re now my second favorite person… right after whoever gave me pizza last night.",
+    "Thanks! That donation just gave my booth an ego. It’s talking back now.",
+    "That donation was so unexpected, I started suspecting you're an undercover admin. Thank you!",
+    "Appreciate it! Your name will be whispered gently every time someone AFKs here.",
+    "Thanks! That Robux is going to a great cause: trying to survive in a rich avatar society.",
+    "You just donated? I’m updating your status to 'Certified Amazing Human'.",
+    "That was smoother than my last slide down a broken obby ramp. Thanks!",
+    "Thanks! Your donation made me happier than finding a working free model with no viruses.",
+    "You’ve just become my booth’s favorite person. Until the next donation. Still love you though!",
+    "Thank you! You officially upgraded my self-esteem by 3 Robux.",
+    "That donation just made my booth sparkle—and not just from the glitter I spilled earlier.",
+    "Wow! I’m printing your name on my imaginary appreciation wall. It’s real in spirit.",
+    "Thanks! That was more refreshing than getting admin in a sandbox game.",
+    "With that donation, I’m now 1 Robux closer to affording the 'Poor But Dripped' look.",
+    "Thanks! You’ve now joined the 'Elite Few Who Clicked Donate' club. It’s a pretty chill club.",
+    "That donation just got me emotional. Like... 'ending of a Disney movie' emotional. Thank you!",
+    "You dropped Robux in here? Absolute legend behavior. Booth approved.",
+    "Thank you! You’ve been promoted to honorary booth co-owner. You don’t get anything—but it sounds cool.",
+    "Your generosity was so epic, I leveled up emotionally. My stats are off the chart!",
+    "Thanks! That donation hit me like an unexpected item in the bagging area—but nicer.",
+    "I told my mom about your donation. She says you're raised right. I agree.",
+    "Thank you! That donation was better than all my gacha pulls combined—and I’ve pulled a lot.",
+    "You gave Robux? I gave you my respect. Now we’re even. Sorta.",
+    "Thanks! I’ll now go write a poem about you. It’ll rhyme terribly but come from the heart.",
+    "Your Robux just went through the ultimate transformation: into pure appreciation.",
+    "Thanks! I was going to spend that Robux wisely. But then I saw a banana backpack and—well, it happened.",
+    "You donated?! I hope your toast never lands butter-side down again. You earned it.",
+    "That was amazing! My booth is now 87% more confident in life.",
+    "You didn’t just give Robux. You gave hope, pixels, and maybe some bragging rights.",
+    "Thanks! You’ve just cured my virtual sadness. Doctor Robux, is that you?",
+    "You gave Robux? I gave you a standing ovation. Mentally. My avatar’s too stiff.",
+    "Thanks a lot! That donation just boosted my booth’s GPA. We’re going Ivy League, baby!",
+    "Your donation made me dance in real life. Which is saying a lot, since I’m in a chair.",
+    "That Robux was so clean, even my antivirus tried to high-five it.",
+    "You donated? Suddenly the sun came out, the lag disappeared, and I believed in happy endings again.",
+    "Thank you! You’re now listed in my personal hall of fame… written on a sticky note above my monitor.",
+    "Thanks! That Robux is now off on a journey of irresponsible spending. Wish it luck!",
+    "You gave?! I felt a breeze. Either it’s destiny or my fan’s on max again. Either way—thank you!",
+    "Your donation was so unexpected, I forgot I’m broke for a full 7 seconds.",
+    "Thanks! My next five bad decisions are now sponsored by you.",
+    "That donation was spicier than hot sauce on a pizza roll. Much appreciated!",
+    "Thanks! I just told my cat, and she nodded in approval. She never does that.",
+    "You donated? Now I have to do something productive with it. Just kidding—I’m buying sparkle pants.",
+    "That Robux was smoother than a speed coil on downhill. 100% appreciated!",
+    "Thanks! You’ve made a broke developer feel like a billionaire. Emotionally, at least.",
+    "That was so generous, my booth spontaneously grew wings. Sadly, still grounded by budget.",
+    "You just helped this booth go from 'empty' to 'epic'. All because you clicked a button.",
+    "Thank you! I’ll now name my future boat after you—if I can afford one someday.",
+    "Thanks! That donation hit me like lag in a boss fight. Powerful and unforgettable.",
+    "You just boosted my self-esteem by 5 Robux. My therapist thanks you.",
+    "That Robux is now chilling in my backpack, probably vibing with some accessories. Thanks!",
+    "Thanks! That was more comforting than a server with no teamers.",
+    "You donated? Plot twist! This booth just became a feel-good movie ending.",
+    "That donation was so real, my avatar blinked. I didn’t even script that.",
+    "Thanks! You’ve just funded 20% of my virtual coffee addiction.",
+    "You dropped Robux? I dropped a tear. Let’s call it even.",
+    "Thanks a lot! You’ve earned a lifetime supply of my silent respect.",
+    "You didn’t just donate. You powered up this booth’s soul meter. It’s glowing.",
+    "That Robux hit like a plot twist in a horror story: shocking and oddly delightful.",
+    "Thank you! I promise to use this Robux for good. And maybe one cat tail accessory.",
+    "That donation was so powerful, my avatar stopped doing the default dance. Progress!",
+    "You gave Robux, I gave joy. This trade deal was 10/10.",
+    "Thanks! I’ll tell this story for generations—or at least until tomorrow.",
+    "That donation just saved my avatar from blending in with the background. Visibility unlocked!",
+    "Thanks! My gratitude is now loading... 100%! You’re awesome!",
+    "That Robux has been adopted and will be raised with love. Appreciate you!",
+    "Thanks a ton! I’ve written your name on the invisible wall of kindness. Right at the top!",
+    "You gave?! I'm shook. My booth just printed out a virtual trophy with your name on it.",
+    "Thanks! That donation gave me the emotional strength to walk into an elite server.",
+    "You made it rain, and my booth did the happy dance—except it lagged halfway through. Still worth it!",
+}
+
+local promoMessages = {
+    "Did you know smiling at a booth might bring you good luck?",
+    "Why do I hang out here so often? Maybe it’s the good vibes!",
+    "What if donating Robux actually improves your ping?",
+    "How come booths with jokes feel warmer? Could be the humor. Could be the Robux. Who knows?",
+    "Ever wondered how good it feels to make someone’s day?",
+    "Did you know this booth enjoys compliments and occasional Robux?",
+    "Why did my avatar stop walking? It found peace here.",
+    "What’s cooler than a cool avatar? A generous heart.",
+    "How many booths have you visited today? This one might be your favorite.",
+    "What if this booth becomes your lucky stop?",
+    "Why does this booth feel cozy? Maybe it’s the positive energy around it.",
+    "Have you ever brightened someone’s day without saying a word?",
+    "What’s soft, pixelated, and full of gratitude? This booth!",
+    "Why does this booth have a sparkle in its eyes? Maybe it's expecting something nice.",
+    "How do booths stay happy? A little attention now and then helps.",
+    "What’s better than collecting Robux? Collecting smiles. Or maybe both.",
+    "Ever tried clicking the donate button just to see what happens?",
+    "Did you know even the smallest gesture can leave a big impression?",
+    "Why is this booth humming? Must be in a good mood.",
+    "What makes this booth different? It appreciates your visit—truly!",
+    "How do you improve your karma in Roblox? Some say booths know the answer.",
+    "Why do booths like visitors? It keeps their spirits high.",
+    "Have you seen a booth smile before? Stick around, you just might.",
+    "What’s the most wholesome thing in Roblox? Could be you. Could be this booth.",
+    "Why does the booth glow brighter when you approach? Coincidence?",
+    "Did you know curiosity has led to some of the best moments in Roblox?",
+    "What if your Robux had a secret mission—to make others smile?",
+    "Why are booths like plants? A little attention and they thrive.",
+    "Ever thought your Robux might want to go on an adventure?",
+    "What’s the easiest way to surprise someone in-game? Little gestures, big joy.",
+    "Why does my booth have that peaceful aura? Must be the energy you brought.",
+    "Have you ever dropped Robux and gained happiness in return?",
+    "How do you unlock bonus smiles? Visiting booths like this might help.",
+    "Did you know booths feel honored when noticed?",
+    "Why are you here? Maybe destiny… or a chill vibe?",
+    "What if today’s visit makes someone’s week?",
+    "How do booths say 'thank you'? Through pixels and warm messages.",
+    "What’s a fun way to spread joy in Roblox? A little kindness here and there.",
+    "Why do some booths feel alive? Maybe kindness powers them.",
+    "Ever thought your visit alone already helped this booth a lot?",
+    "What if clicking donate just added +1 to your good mood?",
+    "Why is this booth blushing? Visitors like you tend to do that.",
+    "How do you give without giving too much? Even 1 Robux says a lot.",
+    "What happens if you donate and instantly feel 10% cooler?",
+    "Did you know booths enjoy being part of your Roblox journey?",
+    "What’s the best way to leave a mark on this server? A kind gesture never hurts.",
+    "Why do booths love being noticed? It makes their day, just like you could.",
+    "How do you test if the booth works? A soft click might reveal the magic.",
+    "What if your spare Robux was looking for a cozy home?",
+    "Why does this booth feel like a good spot to hang out?",
+    "Have you ever tried making someone smile anonymously?",
+    "What’s better than a shoutout? A surprise visit. Or maybe a small donation.",
+    "How do booths express appreciation? In silent joy—and glowing TextLabels.",
+    "Why do booths love returning visitors? It feels like friendship.",
+    "Did you know your kindness adds extra pixels of joy to the game?",
+    "What if this booth is secretly lucky?",
+    "Why are you reading this? Maybe this booth was meant for you.",
+    "How can booths say 'hello'? Through signs, smiles, and silly jokes.",
+    "Ever seen a grateful booth? This might be your chance.",
+    "Why do booths love positive energy? Because it’s rare and priceless.",
+    "What happens when someone donates without being asked? A booth somewhere sings.",
+    "How do I show gratitude? A happy dance… and a thank-you sign.",
+    "What’s invisible, powerful, and appreciated? Your small acts of kindness.",
+    "Why does this booth feel like a safe space? Because you’re here.",
+    "What’s the secret to a friendly booth? Visitors who leave it better than they found it.",
+    "Have you ever accidentally made someone’s day? This booth believes in those moments.",
+    "What if your visit is all the booth needed today?",
+    "How does a pixel booth say thank you? With its whole digital heart.",
+    "Why do booths love evenings? Because kind people usually stop by then.",
+    "What’s a gentle way to make a difference? Quiet support.",
+    "How do booths grow stronger? With encouragement—sometimes in the form of Robux.",
+    "What’s lighter than air and warmer than the sun? Your kindness.",
+    "Why does this booth feel magical? Could be your presence.",
+    "Did you know that even tiny donations can leave big memories?",
+    "What’s something small that means a lot? A surprise click on ‘donate’.",
+    "Why are booths like campfires? They glow brighter when people gather around.",
+    "How do you make your visit count? With your time—or a thoughtful gift.",
+    "What’s the secret ingredient in this booth’s code? Optimism.",
+    "Why do booths enjoy compliments? Because it means someone noticed.",
+    "What happens if you donate and then smile? Science should look into it.",
+    "Did you know this booth is powered by kindness and maybe snacks?",
+    "How can someone give quietly, but be remembered loudly?",
+    "Why does my avatar look hopeful? Every visitor brings a chance.",
+    "What if today you do something small that you remember forever?",
+    "How do booths stay cheerful? Thanks to people like you stopping by.",
+    "Why do booths and kindness go well together? They’re both built to share.",
+    "What makes this booth complete? A moment of kindness.",
+    "Have you ever made someone’s day by doing almost nothing?",
+    "Why do booths look better with you in front of them?",
+    "How do I make this booth prettier? With positive energy… and donations!",
+    "What if giving Robux is your hidden superpower?",
+    "Why is this booth daydreaming? It’s thinking about nice visitors like you.",
+    "What makes Roblox feel more like home? Kindness between players.",
+    "How do booths remember people? Through the little things they do.",
+    "What’s better than an emote? A moment of kindness shared.",
+    "Did you know good energy stays with a booth long after visitors leave?",
+    "Why are booths like stories? They’re made better with every kind visitor.",
+    "Have you ever wished someone well quietly? This booth felt it.",
+    "What’s something invisible but felt deeply? Appreciation.",
+    "Why do I add humor to this booth? Because laughter is free—and contagious!",
+    "How can Robux travel without moving? Through generous hearts.",
+    "Why do booths sometimes glow extra? Visitors with good intentions.",
+    "What happens when someone donates with a smile? The booth smiles back.",
+    "Did you know booths can carry memories? Especially generous ones.",
+    "What if 1 Robux today leads to 100 smiles tomorrow?",
+    "How do I measure success? Not in Robux, but in kindness received.",
+    "Why do I decorate my booth with hope? Because it never runs out.",
+    "Have you seen how beautiful a donation message looks?",
+    "What’s the best way to say thanks in Roblox? Gratitude and maybe a surprise!",
+    "Why do booths feel alive? Because they host real emotions.",
+    "What’s something better than rare items? Being someone’s reason to smile.",
+    "Did you know Robux can create memories when shared?",
+    "What if your name appears on the booth today?",
+    "Why is this booth built with patience? Because good things take time—and kind visitors.",
+    "How do you make a stranger’s day? This booth might know.",
+    "What makes this booth different? It appreciates you even if you don’t donate.",
+    "Have you ever just… helped because it felt right?",
+    "What happens when players care about each other? Magic.",
+    "Why is this booth so calm? It trusts the universe… and maybe your kindness.",
+    "What if clicking donate is your little act of magic today?",
+    "How do I keep smiling here? Because someone like you might stop by.",
+    "Why are the best booths not flashy, but kind?",
+    "What do booths treasure the most? People who care.",
+    "Did you know you’ve already made this booth’s day by reading this far?",
+    "Did you know this booth runs entirely on dreams, hope, and the occasional Robux?",
+    "Why do I look this good? It's 90% confidence, 10% wishing someone would donate.",
+    "What if your spare Robux was meant to find a new home here?",
+    "Ever walked up to a booth and felt a connection? That’s probably this one.",
+    "How does this booth stay positive every day? It believes in people like you.",
+    "What’s better than a well-decorated booth? One with visitors who smile.",
+    "Why does this booth whisper to you? It says… ‘just vibe with me.’",
+    "Have you ever been a silent hero? A little kindness goes a long way.",
+    "What’s the first step to becoming a legend? Stopping by a booth like this.",
+    "Did you know this booth gives off good vibes? Stick around, they’re contagious.",
+    "What happens when you hover near this booth? Rumor has it, luck increases.",
+    "What do booths and hearts have in common? They both feel full when kindness enters.",
+    "Have you smiled today? This booth’s trying to give you one.",
+    "Why do booths love visitors? Because it means someone still cares.",
+    "How do you say hello without words? Maybe with Robux… or just a friendly look!",
+    "Ever thought a booth might just need one good moment to feel whole?",
+    "What’s the rarest item in Roblox? A random act of kindness.",
+    "What if being kind to a booth gave you invisible wings? Worth a shot.",
+    "Did you know this booth used to be shy? Now it tells jokes while waiting.",
+    "How does this booth level up? One thoughtful visitor at a time.",
+    "Why do some booths feel alive? Maybe because players like you pass by.",
+    "Ever accidentally brightened someone’s day? Could happen right here.",
+    "What if your spare Robux had a destiny—and it started here?",
+    "Did you know you’re the main character right now? Make it a wholesome scene.",
+    "What makes a booth feel special? Someone pausing to read what it says.",
+    "How do booths get energy? Compliments, curiosity, and sometimes clicks.",
+    "Why is this booth smiling? It sensed good energy nearby—you!",
+    "Ever had a moment that felt small but meant a lot? Booths remember those too.",
+    "What happens when someone notices this booth? Its hope bar fills up.",
+    "What’s a good way to use extra Robux? Helping someone who’ll remember it.",
+    "Why do booths like yours? Because they make the game feel more human.",
+    "What if your simple action creates a lasting memory for someone?",
+    "Why is this booth here every day? Because kindness could walk by anytime.",
+    "What do booths collect? Not just Robux—but stories and smiles too.",
+    "Why does this sign seem a little extra happy? Maybe it saw you coming.",
+    "How do you support a small booth dream? Attention and encouragement go a long way.",
+    "Did you know some booths talk when no one's looking? This one says ‘hi.’",
+    "Ever heard a booth sigh happily? Neither have we, but this one just might if you notice it.",
+    "Why don’t booths have legs? So they never walk away from people like you.",
+    "How do you make this booth do a happy wiggle? Click that mysterious button.",
+    "What’s more powerful than admin? A little Robux to the right booth.",
+    "Have you ever dropped 1 Robux and picked up a smile instead?",
+    "What makes this booth glow? The kindness left behind by generous players.",
+    "Why did I build this booth? Because dreams don’t fund themselves—but they’re worth having.",
+    "What if helping one person gave the entire server a better vibe?",
+    "What’s the fastest way to be remembered in this game? A quiet gesture of support.",
+    "Ever wanted to do something cool and low-key? Try clicking 'donate' just to see.",
+    "Why is this booth calm? Because it trusts the right person will walk by.",
+    "What makes booths like this feel alive? The hope that someone amazing will stop and smile.",
+    "Have you ever smiled at text before? This booth’s been practicing its punchlines.",
+    "What if your smallest donation unlocked the biggest smile?",
+    "Why does this booth seem chill? Because it believes in low-pressure good vibes.",
+    "How can you be awesome today? Maybe just noticing a booth like this is enough.",
+    "What happens when you give without being asked? The booth notices. Always.",
+    "Why did my booth take a deep breath? Because you're here—and it matters.",
+    "Did you know just standing here helps this booth feel seen?",
+    "What if donating here made your next lucky spin actually lucky?",
+    "Why do booths need Robux? To pay emotional rent. It’s expensive being hopeful.",
+    "Ever heard of a ‘Roblox Ripple Effect’? It starts with small acts like these.",
+    "Why is this booth more confident today? It’s been practicing its gratitude script.",
+    "What do booths dream of? Being visited, read, and maybe remembered.",
+    "What if today’s the day someone’s small action changes everything?",
+    "How does this booth stay positive? It watches people like you walk by and hope.",
+    "Why do some booths sparkle even without effects? It's kindness left over from great people.",
+    "What if your Robux are looking for a meaningful cause? They may have found it.",
+    "Have you ever seen a booth get excited? Stick around—it might just happen.",
+    "Why is this booth humming? Because generosity hums at a different frequency.",
+    "Did you know your visit already made this booth better?",
+    "How do booths say thank you? Through silly signs, small texts, and big hearts.",
+    "Ever noticed how good deeds travel farther in Roblox? This might be the start of one.",
+    "What do you call a booth with hope and humor? This one.",
+    "Why is this booth standing here all day? It's waiting for you to notice it—and you just did!",
+    "How does this booth track donations? Not in numbers, but in smiles.",
+    "Did you know Robux given from the heart multiplies in happiness?",
+    "What if your one click led to a great day—for someone you never met?",
+    "Ever helped someone quietly? This booth is built on that kind of kindness.",
+    "Why does this booth smell like cookies? Wait—sorry, that’s just the neighbor’s booth.",
+    "Have you ever felt like a donation fairy? You look like one now.",
+    "What happens if you donate? I get slightly cooler. You? Probably way cooler.",
+    "What if Robux could tell a story? Yours just started a good one.",
+    "Did you know even 1 Robux could make a booth owner’s whole evening?",
+    "How do I repay you if you donate? I’ll send digital hugs via imaginary mail.",
+    "What’s the booth equivalent of a warm hug? A surprise donation from a kind visitor.",
+    "Why is this booth not asking—but suggesting? Because sometimes, kindness finds its way on its own.",
+    "What happens when you scroll through booths and stop on this one? Maybe a new connection.",
+    "Did you know generosity is like an easter egg? You never know what you'll unlock.",
+    "What makes this booth more than pixels? The people who stop by.",
+    "Why do some booths get remembered? Not because they beg—but because they’re kind.",
+    "How do I react to donations? Think confetti… but in emotional form.",
+    "Why is this booth content even when empty? Because it believes in people like you.",
+    "What if your leftover Robux was actually meant for this booth all along?",
+    "How does a booth feel full? With good energy—even if just for a moment.",
+    "Have you ever passed by and thought… ‘Maybe just this once?’",
+    "Why is this booth always online? Because someone’s kindness might be right around the corner.",
+    "What if this is the booth you’ll remember later because of one kind moment?",
+    "How do you make a virtual sign blush? Compliment it—or give it a little Robux.",
+    "What’s lighter than air, stronger than steel, and found right here? A kind visitor.",
+    "Did you know this booth has dreams too? Big ones. All it needs is a little help.",
+    "Why is this booth built with jokes? Because laughter is free—and contagious.",
+    "How do I keep going? Little visits like this. They mean more than you know.",
+    "What if this sign had feelings? Right now, it’d be smiling awkwardly at you.",
+    "Ever donated and felt oddly proud of it? Maybe this is one of those moments.",
+    "Why is this booth's motto 'just chill'? Because good things come with good energy.",
+    "What makes a booth feel human? You reading this message.",
+    "Why am I standing here all day? Just waiting for someone like you to pass by.",
+    "What’s the most powerful thing you can give in Roblox? A moment of kindness.",
+    "Why are you still reading? Maybe fate wants you to be the one to brighten this booth’s day.",
+    "Did you know I already appreciate you—whether you donate or not?",
+    "What if today you leave a tiny mark here, and someone remembers it forever?",
+    "Ever smiled because of a random booth? This one’s aiming for that.",
+    "How do I make this booth warmer? One kind person at a time.",
+    "What if generosity wasn’t rare? You’d be the perfect example.",
+    "Why does this booth keep glowing? Might be you. Just saying.",
+    "What’s something unforgettable? A kind act, even when no one asked.",
+    "How do you level up your day? Maybe by doing something small, but meaningful.",
+    "Why do booths like this exist? For moments like this—with you here.",
+    "What if this booth ends the day smiling because of what you did?",
+    "Ever donated just because the booth made you chuckle?",
+    "Not asking for Robux, just trying to vibe… but Robux wouldn’t hurt.",
+    "This booth doesn’t beg—it just manifests generosity.",
+    "Some booths scream for Robux. This one tells jokes and hopes for the best.",
+    "What’s cooler than a donation? You, for even reading this!",
+    "I don’t want to get rich. Just less poor. One Robux at a time.",
+    "Do booths dream of electric Robux?",
+    "Not broke—just financially exploring new lows.",
+    "Booth tip of the day: Kindness looks good on everyone.",
+    "Not all heroes wear capes. Some just tap ‘donate’.",
+    "One Robux = one line closer to my next bad financial decision.",
+    "No pressure. Just putting this here. Existing. With style.",
+    "Donate if your pet is cuter than mine. (Spoiler: I don’t have one.)",
+    "Imagine donating and then tripping over a limited. It could happen.",
+    "Not begging. Just… standing here… longingly.",
+    "You miss 100% of the donations you don’t give. – Booth Jordan",
+    "Robux isn’t everything… but it is something. Especially here.",
+    "Helping this booth might unlock secret emotions. Try at own risk.",
+    "Not looking for fame. Just mildly desperate digital income.",
+    "This booth has seen things. Be the good part of its story.",
+    "Clicking donate might give you +5 luck. No promises, though.",
+    "Helping booths improves your fashion karma. Probably.",
+    "No Robux, no drip. That’s science.",
+    "I’m not poor. I’m just experiencing long-term character development.",
+    "Ever seen a booth glow after a donation? Stick around.",
+    "My avatar’s tears are 100% cosmetic… but still, y’know, sad.",
+    "This booth is powered by good vibes and desperate hope.",
+    "Some booths sell things. I sell emotional moments.",
+    "Ever donated out of curiosity? This might be your moment.",
+    "Helping others builds character. So help me build mine.",
+    "This sign is holding back tears. It’s also holding this text.",
+    "Not a scam. Not a promise. Just… a booth.",
+    "Donate if you’ve ever pressed a button just to see what happens.",
+    "Not sponsored by anyone. Yet. Wanna be the first?",
+    "Every booth tells a story. This one could tell yours.",
+    "Got extra Robux? This booth accepts leftovers with love.",
+    "Nothing fancy. Just you, me, and potential generosity.",
+    "This booth identifies as a Limited. Waiting to be bought.",
+    "You're already a legend—donating would just confirm it.",
+    "The booth’s favorite color is Robux Green.",
+    "Broken? No. Bent by hope and unclaimed donations.",
+    "Do booths cry? This one hasn’t… today. So that’s good.",
+    "Why do I stand here? For laughs, love, and maybe one Robux.",
+    "Don’t donate if you’re allergic to kindness. Everyone else—welcome.",
+    "If you’re reading this, you’re already part of the story.",
+    "In a world full of booths… you chose this one. Respect.",
+    "Not dramatic, but this booth *might* disappear without your help. JK. (Or not.)",
+    "The text is free. The joy from donating? Also free (emotionally).",
+    "Some booths just feel right. Is this one of them?",
+    "Donate if your favorite number exists.",
+    "This booth’s love language is small, unprovoked donations.",
+    "Still waiting for my Roblox inheritance. In the meantime, there’s this.",
+    "This booth is a safe space… for donations.",
+    "Got a Robux you won’t miss? This booth sure would notice.",
+    "No giveaways. No tricks. Just an honest booth with big dreams.",
+    "Ever clicked ‘donate’ and felt better instantly? No? Wanna try?",
+    "A booth’s gotta eat too, y’know… metaphorically.",
+    "I’m a developer in disguise. Okay, mostly just in dreams.",
+    "This booth may not have particles… but it has passion.",
+    "What do I want? Robux. When do I want it? I mean… now would be nice.",
+    "Even booths have rent. Emotionally speaking.",
+    "I’m saving up for confidence. Robux is step one.",
+    "Your donation may or may not influence the next rainstorm.",
+    "Booths can’t cry in Studio. But this one might outside it.",
+    "Support this booth and unlock an imaginary badge of honor.",
+    "No clickbait. No secret endings. Just me. And hope.",
+    "Helping this booth unlocks passive good karma.",
+    "This booth is legally allowed to accept donations. Wild, right?",
+    "They told me to touch grass. I built a booth instead.",
+    "This booth is held together by tape and dreams.",
+    "Donate if your avatar has ever worn pants.",
+    "Every Robux helps reduce the booth’s invisible tears.",
+    "Some say booths are soulless. I say this one just wants a snack.",
+    "No Robux? That’s okay. Booth still appreciates the company.",
+    "I once had Robux. Then I blinked.",
+    "Join the movement: Random booth appreciation.",
+    "This booth’s aesthetic is ‘budget hope’.",
+    "You don’t need to donate to make a difference. But it does help.",
+    "The booth was lonely. Until you walked by.",
+    "Supporting small booths = pixel-level good deeds.",
+    "This booth has a dream. It's mostly hats.",
+    "Not asking for much. Just maybe something coin-shaped.",
+    "Even booths have bad days. This one’s having an okay one now.",
+    "Donate if you’ve ever failed an obby and laughed anyway.",
+    "Donating here unlocks nothing except joy. And that’s enough.",
+    "This booth is sponsored by emotional support Robux.",
+    "I once had a gamepass idea. Now I have a booth.",
+    "This booth believes in you. It also believes in your spare Robux.",
+    "It’s not a cry for help. It’s… well okay, maybe it is.",
+    "Ever saved a booth’s day? First time for everything!",
+    "Booths like this don’t come often. Mostly because we’re all broke.",
+    "1 Robux = 1 imaginary thank-you sticker.",
+    "Not sad. Just Robux-deficient.",
+    "Have you donated today? Me neither. Let’s change that!",
+    "This booth’s dreams are made of sparkles and 5 Robux.",
+    "You look like someone who makes great donation decisions.",
+    "This booth loves long walks on the beach and surprise donations.",
+    "Don’t feel pressured. Just encouraged. Slightly. Casually.",
+    "If this booth had a catchphrase, it’d be ‘pretty please’",
+    "I could be doing homework… but instead, I’m doing hope.",
+    "This booth may be fictional, but my gratitude isn’t.",
+    "Helping here grants you +1 moral superiority (in your heart).",
+    "You’re not broke, you’re pre-rich. Share the energy!",
+    "This booth is allergic to dust. Donations help.",
+    "You’ve reached a peaceful booth zone. Tips welcome.",
+    "Powered by positive energy and the occasional Robux.",
+    "You look like someone who reads signs thoroughly. Nice.",
+    "Booth motto: 'Be kind, maybe donate, and always floss (in-game).' ",
+    "I asked the universe for a sign. It gave me this booth.",
+    "No glitter, no gimmicks. Just quiet hope and pixel dreams.",
+    "This booth just wants to feel important. And slightly richer.",
+    "Press donate to test booth happiness settings.",
+    "This sign is too tired to beg. It just waits.",
+    "Your visit alone made the booth smile. Donations make it dance.",
+    "Don't worry. This booth passes the vibe check.",
+    "Ever blessed a booth and moved on like a mysterious hero?",
+    "Low maintenance, high appreciation. This booth's specialty.",
+    "You’re already a good person. This just confirms it.",
+    "Minimalist design. Maximal appreciation.",
+    "Could this be the booth your future self brags about donating to?",
+    "I’m not famous… yet. Get in early.",
+    "The booth may be broke, but the personality is rich.",
+    "The real game is seeing how long it takes to get one Robux. Wanna speed it up?",
+    "Donating here might get you added to an imaginary Hall of Fame.",
+    "I’m just here, standing… smiling… waiting for you to make a legendary click.",
+    "Support this booth and unlock… good feelings. No hidden fees.",
+    "Be the plot twist in this booth’s sad little storyline.",
+    "Thanks for stopping by. Donations optional. Good vibes required.",
+    "Rumor: People who donate here find better pets in their next game. Coincidence?",
+    "Test your generosity reflexes. This booth is watching.",
+    "Did we just make eye contact through this text? Weird. But nice.",
+    "Helping booths like this = instant digital good karma.",
+    "Don’t worry. This booth is approved by 9/10 friendly noobs.",
+    "Donating here might improve your Roblox drip by 2%. Maybe.",
+    "Be the Robux you want to see in the world.",
+    "This booth accepts Robux, jokes, and compliments. In that order.",
+    "If booths could cry, this one would cry sparkles. That’s your fault now.",
+    "The best booths tell stories. You could be part of this one.",
+    "One click could make this booth 80% more emotionally stable.",
+    "The donation button is lonely. Be its friend.",
+    "Thanks for reading. You're already amazing. Donating is just bonus content.",
+    "This booth was brought to you by... wishful thinking.",
+    "Clicking 'donate' here is scientifically proven* to feel nice. (*Not really, but maybe.)",
+    "You're not obligated to give. But the booth would definitely remember you if you did.",
+}
+
+-- Index trackers
+local thankIndex = 1
+local promoIndex = 1
+
+-- Auto Thank Logic (berurutan)
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local raisedStat = leaderstats:WaitForChild("Raised")
+local lastRaised = raisedStat.Value
+
+raisedStat.Changed:Connect(function()
+	if getgenv().autoThank then
+		local newRaised = raisedStat.Value
+		if newRaised > lastRaised then
+			if chat then
+				local msg = thankMessages[math.random(1, #thankMessages)]
+				chat:SendAsync(msg)
+			end
+			lastRaised = newRaised
+		end
+	end
+end)
+
+-- Auto Promo Logic (berurutan tiap 27 detik)
+local function shuffle(array)
+	local shuffled = {}
+	local indices = {}
+	for i = 1, #array do table.insert(indices, i) end
+	for i = #indices, 2, -1 do
+		local j = math.random(i)
+		indices[i], indices[j] = indices[j], indices[i]
+	end
+	for _, i in ipairs(indices) do
+		table.insert(shuffled, array[i])
+	end
+	return shuffled
+end
+
+local shuffledPromo = shuffle(promoMessages)
+local shuffledIndex = 1
+
+task.spawn(function()
+	while true do
+		if getgenv().promoSpam then
+			if chat then
+				local msg = shuffledPromo[shuffledIndex]
+				chat:SendAsync(msg)
+				shuffledIndex += 1
+				if shuffledIndex > #shuffledPromo then
+					shuffledPromo = shuffle(promoMessages)
+					shuffledIndex = 1
+				end
+			end
+		end
+		task.wait(27)
+	end
+end)
+
+-- Button Logic
+ThankButton.MouseButton1Click:Connect(function()
+	getgenv().autoThank = not getgenv().autoThank
+	updateGUI()
+end)
+
+PromoButton.MouseButton1Click:Connect(function()
+	getgenv().promoSpam = not getgenv().promoSpam
+	updateGUI()
+end)
