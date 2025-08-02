@@ -1,1 +1,353 @@
+-- Pengaturan awal (ubah ke false agar tidak aktif saat mulai)
+getgenv().autoThank = false
+getgenv().promoSpam = false
 
+-- Services
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+local VirtualUser = game:GetService("VirtualUser")
+local localPlayer = Players.LocalPlayer
+local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
+
+-- Anti-AFK
+local Players = game:GetService("Players")
+
+Players.LocalPlayer.Idled:Connect(function()
+	local vu = game:GetService("VirtualUser")
+	-- Ini hanya trigger untuk reset idle, tidak akan klik mouse
+	vu:CaptureController()
+	vu:ClickButton1(Vector2.new(0, 0))
+end)
+
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = localPlayer:WaitForChild("PlayerGui")
+ScreenGui.Name = "AutoGUI"
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 220, 0, 130)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -65)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local ThankButton = Instance.new("TextButton")
+ThankButton.Size = UDim2.new(0, 200, 0, 40)
+ThankButton.Position = UDim2.new(0, 10, 0, 10)
+ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ThankButton.TextColor3 = Color3.new(1, 1, 1)
+ThankButton.Parent = Frame
+
+local PromoButton = Instance.new("TextButton")
+PromoButton.Size = UDim2.new(0, 200, 0, 40)
+PromoButton.Position = UDim2.new(0, 10, 0, 60)
+PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+PromoButton.TextColor3 = Color3.new(1, 1, 1)
+PromoButton.Parent = Frame
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(0, 200, 0, 20)
+StatusLabel.Position = UDim2.new(0, 10, 0, 105)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.TextColor3 = Color3.new(1, 1, 1)
+StatusLabel.TextScaled = true
+StatusLabel.Parent = Frame
+
+-- Update GUI text sesuai status awal
+local function updateGUI()
+	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
+	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
+	StatusLabel.Text = "Status: Thank " .. (getgenv().autoThank and "ON" or "OFF") .. " / Promo " .. (getgenv().promoSpam and "ON" or "OFF")
+end
+
+updateGUI()
+
+-- Messages
+local thankMessages = {
+    "Thanks a ton! My avatar just upgraded from ‘glitchy background extra’ to ‘plot-relevant protagonist with wardrobe options!’",
+    "That donation was so powerful, my avatar finally stopped using leaf-blowers to simulate walking animations!",
+    "You're a hero! My avatar's diet of pixel dust and regret is now supplemented with virtual cheese snacks!",
+    "Thanks! Now my GUI buttons no longer cry silently when nobody clicks them. You've brought hope!",
+    "You just prevented my avatar from joining the cult of lag. Now it moves with grace, almost like it paid for premium animations!",
+    "That donation gave my avatar emotional support pixels. They’re fluffy and squeak motivational quotes!",
+    "You're amazing! My character finally swapped its cardboard cape for one made of actual polygons!",
+    "You just gave my code self-esteem. It’s now convinced it can be a triple-A title someday!",
+    "Thanks! The server no longer hiccups every time someone joins. It now greets them with jazz hands!",
+    "Your donation allowed my avatar to visit the legendary land of Frame Stability. Population: Just me, now.",
+    "Thank you! We finally fixed the bug where my avatar kept moonwalking instead of running. It’s learning boundaries now!",
+    "You just gave my GUI a glow-up. It’s currently auditioning for a modeling contract with Interface Weekly.",
+    "That donation gave my avatar dreams. Last night it dreamed of owning a backpack with pockets that actually open!",
+    "You're officially the reason my scripts don’t cry during runtime anymore. They now whisper: ‘I’ve got this!’",
+    "Thanks! My avatar graduated from Lag University with honors in Frame Management!",
+    "Your generosity gave my game ambient music composed by actual bees with rhythm. Buzz beats!",
+    "That donation let me hire a virtual janitor to clean up my buggy code. The mop squeaks motivational slogans!",
+    "Wow! My avatar’s shoes stopped screaming with every step. They now hum dramatic tunes!",
+    "Thank you so much! My game finally added a ‘pause’ button that doesn’t ask existential questions!",
+    "Thanks to you, my script now drinks coffee and throws exception errors only on weekends!",
+    "You’re the reason my avatar now blinks voluntarily instead of every third Tuesday!",
+    "Your kindness gave my code hope. It now dreams of being featured in a tutorial someday!",
+    "Thanks! My loading screen no longer feels abandoned. It now shows tips written by squirrels!",
+    "With your help, my avatar stopped responding to gravity like a dramatic soap opera character!",
+    "You just made my scripts feel loved. They now high-five themselves after executing properly!",
+    "My GUI was about to elope with a dropdown menu. Your donation convinced it to stay professional!",
+    "Thanks! My character finally stopped sneaking into other games pretending to be ‘debug mode.’",
+    "You gave my avatar a sense of fashion. It’s now debating between pixel trench coats or polygon ponchos!",
+    "Thanks! My scripts now brag in the code comments about being stable. It’s adorable!",
+    "Your donation turned my loading bar into an adventure. It now climbs mountains instead of crawling!",
+    "Thank you! My avatar finally accepted that headless isn’t a fashion statement—it’s a server bug!",
+    "You just helped my physics engine stop making everything bounce like jelly at a trampoline park!",
+    "Your generosity made my game soundtrack go from ‘elevator music’ to ‘epic dragon battle themes!’",
+    "Thanks! My GUI finally got therapy for its button placement anxiety. Now it’s centered—emotionally and spatially.",
+    "My avatar stopped hosting pity parties in the inventory. Now it has picnics with updated assets!",
+    "Thanks to you, my scripts stopped gossiping about deprecated functions behind the compiler’s back!",
+    "Wow! My animation rig just learned how knees work. Revolutionary movement incoming!",
+    "You gave my character a voice. It now sings sea shanties when idle!",
+    "Thanks! My textures finally stopped pretending to be abstract art. They now resemble the thing they represent!",
+    "Your donation made my avatar realize it doesn’t have to be edgy to be cool. Growth!",
+    "Thanks! My spawn point stopped teleporting people into walls. We’re calling that ‘progress!’",
+    "With your help, my lighting system got upgraded to ‘moody but functional.’ Like a teenager who does chores!",
+    "You helped my game stop crashing during player intros. Now it awkwardly waves instead!",
+    "Thanks! My avatar now respects collision boundaries. No more unintended parkour through floors!",
+    "My GUI just earned its degree in Responsiveness. It now adjusts faster than my mood when I forget snacks!",
+    "Your donation gave my game ambition. It now wants to win a local pixel beauty pageant!",
+    "Thanks! My script finally stopped mistaking ‘nil’ for a spiritual journey!",
+    "You gave my character the courage to ask for help instead of rage-quitting in dramatic silence!",
+    "Thanks! My game now features ambient chirping made by code-generated birds with opinions!",
+    "Your kindness made my avatar realize gravity isn’t optional. We now fall responsibly!",
+    "Thanks! My particle effects now sparkle with intention—not just randomly sneeze glitter!",
+    "You helped my game stop simulating thunderstorms every time someone opens the shop tab!",
+    "Your donation was so strong, my avatar now believes it’s the chosen one. We’re letting it have that moment.",
+    "Thanks! My GUI no longer panics when resized. It now adjusts like a yoga master!",
+    "You gave my script courage. It no longer hides behind ‘for loops’ to avoid confrontation!",
+    "Thanks! My avatar now walks like it has a destination—not just wandering through existential lag!",
+    "Your help made my textures emotionally available. They now express feelings through shading!",
+    "Thanks! My game finally recognized that bugs are not features. We’ve started the healing process!",
+    "Your donation helped my avatar buy plot armor. Not the overpowered kind—just stylish!",
+    "Thanks! My inventory system no longer plays Tetris with sadness. It’s optimized now!",
+    "You gave my avatars dreams of stardom. They're rehearsing dialogue in front of the mirror tab!",
+    "Thanks! My scripts now flirt with stability. There’s commitment in those parentheses!",
+    "You helped my code accept its past—especially those lines written during coffee withdrawal!",
+    "Thanks! My avatars discovered teamwork instead of existential solo quests!",
+    "Your donation turned my bug tracker into a spa day planner. Less chaos, more calm!",
+    "Thanks! My UI stopped arranging itself like modern art. It now follows symmetry and respect!",
+    "Your kindness gave my server enough courage to handle two players. Ambitious growth!",
+    "Thanks! My avatar now uses escalators instead of dramatic leaps of faith!",
+    "You helped my NPCs find purpose beyond standing awkwardly near bushes!",
+    "Thanks! My audio system learned about volume control. No more jump-scares from button clicks!",
+    "You gave my scripting logic closure. It now ends loops with grace and style!",
+    "Your support made my character animations less chaotic interpretive dance and more narrative-driven drama!",
+    "Thanks! My GUI learned contrast. Text no longer camouflages against mystery backgrounds!",
+    "Thanks to you, my scripts no longer believe ‘else’ is a personal insult!",
+    "You helped my avatar stop impersonating loading bars mid-action. It now performs with confidence!",
+    "Thanks! My weather effects finally understood realism. No more pixel typhoons indoors!",
+    "You gave my debug console emotional range. It now responds with concern, not sarcasm!",
+    "Thanks! My avatar's cape stopped glitching into parallel dimensions. It stays in this reality now!",
+    "Thanks! My cooldown system got therapy—it no longer panics under pressure!",
+    "You helped my game’s camera finally stop stalking foliage. It now respects personal space!",
+    "Your donation taught my font choices empathy. No more Comic Sans for tragic scenes!",
+    "Thanks! My scripting errors now send apology notes. Progress!",
+    "You gave my level design optimism. Now maps curve with hope, not just sharp corners of regret!",
+    "Thanks! My keyboard GUI stopped being passive-aggressive. It now greets fingers with joy!",
+    "You helped my asset manager forgive duplicate files and start fresh!",
+    "Thanks! My game now considers player emotions. We added a ‘hug’ mechanic!",
+    "Your generosity helped my collision detection mature. It no longer assumes everything is love at first impact!",
+    "Thanks! My scripting references now cite real growth, not forgotten tutorials!",
+    "Thanks to you, my shaders learned self-worth. They now glow with purpose!",
+    "You gave my avatar closure for every time the spawn point ghosted them!",
+    "Thanks! My scripts now meditate before compiling. No more emotional panics!",
+    "Your help gave my render cycle rhythm. It dances at 60 FPS with pride!",
+    "Thanks! My avatar’s idle animation no longer reads as an existential crisis!",
+    "You inspired my GUI to dream beyond borders—it now adapts to screen sizes with flair!",
+    "Thanks! My inventory tabs now believe in themselves. They no longer hide behind submenus!",
+    "You helped my game discover pacing. We no longer sprint through plot like caffeine-fueled rabbits!",
+    "Thanks! My background assets now do more than fill space—they narrate ambiance!",
+    "Your support turned my patch notes into poetry. Rhymed bug fixes, anyone?",
+    "Thanks! My avatar now dances in cutscenes instead of freezing like a startled potato!",
+}
+
+
+
+local promoMessages = {
+    "Donate now and prove you're not secretly AFK.",
+    "One tap and you’re officially cooler than most traders.",
+    "Donating: because your pet won't do it for you.",
+    "This server loves donations. Way more than fake trades.",
+    "Feeling kind? That donate button is calling you.",
+    "You don’t need a GAG Pet to be generous.",
+    "Be the MVP this server didn’t know it needed.",
+    "Donations make you stand out. Even more than your alt.",
+    "AFK status won’t hide your lack of generosity.",
+    "Your inventory flex is nice, but donations flex harder.",
+    "Give a little. Smile a lot.",
+    "Donate and break the cycle of trading nonsense.",
+    "Generosity level: unlocked!",
+    "Donating > pretending to sleep.",
+    "Be iconic. Be kind.",
+    "Help out before your AFK excuse wears thin.",
+    "That pet’s stats won’t impress anyone like kindness does.",
+    "Click donate. Become a server legend.",
+    "All this flex, zero donation? Let’s fix that.",
+    "Even your alt would’ve donated by now.",
+    "Donations are free from drama and fake item value.",
+    "Make today the day you do something awesome.",
+    "Be generous before someone accuses you of scamming.",
+    "Donating is 100% safe and 200% cool.",
+    "Drop a donation — no trading window required.",
+    "Don't wait for a free item, give a free blessing.",
+    "Flex kindness. It has no cooldown.",
+    "You're already online. Why not make it count?",
+    "Pet power fades. Donor power stays.",
+    "Donating: the ultimate plot twist.",
+    "Alt accounts can’t donate for you forever.",
+    "Stop lurking. Start giving.",
+    "Even your GAG Pet wants you to press donate.",
+    "Trade your silence for good vibes.",
+    "Help the server before pretending to crash again.",
+    "Generosity is never a scam.",
+    "Lift the vibe with one simple click.",
+    "Donating beats waiting around looking mysterious.",
+    "Support the server. Surprise your squad.",
+    "Not everything can be traded. Kindness is shared.",
+    "Donate, and make your name stand out for the right reason.",
+    "Trading fake value all day? Try real impact.",
+    "Even AFK players appreciate donations.",
+    "Alt account flexing doesn’t count until you donate.",
+    "One donation a day keeps the lag away.",
+    "Be the player people actually remember.",
+    "You’re online anyway. Why not be awesome?",
+    "Kindness currency never crashes.",
+    "Your pets don’t need food. This server needs your kindness.",
+    "Legendary items? Nah — legendary donors.",
+    "Donating is easier than pretending to be AFK.",
+    "Join the donor elite. No scam included.",
+    "Boost the server. It's way better than boosting egos.",
+    "Pet spam? Nope. Donation slam.",
+    "Make your alt proud — donate like a pro.",
+    "Trade kindness. It never glitches.",
+    "Server vibes go up when donors step in.",
+    "Real flex: giving without asking anything back.",
+    "Donating isn’t risky — unlike some trades you've seen.",
+    "Kind players stand out. Even in lag.",
+    "Help out. Make your time online matter.",
+    "Give once. Be remembered forever.",
+    "Being kind never needs patch notes.",
+    "Share the love. Skip the scam.",
+    "Donors get the best karma drops.",
+    "Trading items? Try trading good energy.",
+    "Alt armies fade. Generous acts echo.",
+    "Raise your status — without pet inflation.",
+    "Generosity isn’t a glitch. It’s a feature.",
+    "Don’t just watch. Do something great.",
+    "Give freely. Don’t wait for a GAG trade to go wrong.",
+    "Donate like you're the main character.",
+    "Flex your heart. It’s the rarest stat.",
+    "Kindness costs nothing but earns everything.",
+    "Even fake AFK players cheer for donors.",
+    "Stop hiding. Start helping.",
+    "Pet value drops. Donations stay legendary.",
+    "Be the surprise helper no one expected.",
+    "Alt accounts cry tears of pride when you donate.",
+    "Donating: more reliable than any server trade.",
+    "Clicking donate = instant server buff.",
+    "Your generosity is more rare than mythical pets.",
+    "Server love hits different when you give.",
+    "Don’t be average — be awesome.",
+    "Skip the AFK timer. Tap donate instead.",
+    "Trade your idle time for kindness time.",
+    "Be generous. Not just present.",
+    "Your donation has no cooldown.",
+    "This server needs donors — not just inventory collectors.",
+    "Donors > silent pet traders.",
+    "Be kind now. Pet trades can wait.",
+    "Drop the alt act. Pick up the kindness vibe.",
+    "Donating is OP. No nerf in sight.",
+    "You’re rich in vibes — let’s spread some.",
+    "Kindness shines brighter than pet stats.",
+    "Even the AFK gang respects a donor.",
+    "Donating is a flex the whole server respects.",
+    "Trade silence for good impact.",
+    "Your generosity is the real hidden skill.",
+    "Don’t wait for fame. Build it with donations.",
+    "Give more than just eye contact.",
+    "Kindness never goes out of meta.",
+    "Donate and make your alt’s dream come true.",
+    "No trade scam here — just love.",
+    "Your coins deserve a better purpose.",
+    "Donating is the real game-changer.",
+    "Be the player who actually gives back.",
+    "Help out while others chase mythical trades.",
+    "Donor vibes > drama vibes.",
+    "Keep it chill. Keep it generous."
+}
+
+
+
+-- Index trackers
+local thankIndex = 1
+local promoIndex = 1
+
+-- Auto Thank Logic (berurutan)
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local raisedStat = leaderstats:WaitForChild("Raised")
+local lastRaised = raisedStat.Value
+
+raisedStat.Changed:Connect(function()
+	if getgenv().autoThank then
+		local newRaised = raisedStat.Value
+		if newRaised > lastRaised then
+			if chat then
+				local msg = thankMessages[math.random(1, #thankMessages)]
+				chat:SendAsync(msg)
+			end
+			lastRaised = newRaised
+		end
+	end
+end)
+
+-- Auto Promo Logic (berurutan tiap 27 detik)
+local function shuffle(array)
+	local shuffled = {}
+	local indices = {}
+	for i = 1, #array do table.insert(indices, i) end
+	for i = #indices, 2, -1 do
+		local j = math.random(i)
+		indices[i], indices[j] = indices[j], indices[i]
+	end
+	for _, i in ipairs(indices) do
+		table.insert(shuffled, array[i])
+	end
+	return shuffled
+end
+
+local shuffledPromo = shuffle(promoMessages)
+local shuffledIndex = 1
+
+task.spawn(function()
+	while true do
+		if getgenv().promoSpam then
+			if chat then
+				local msg = shuffledPromo[shuffledIndex]
+				chat:SendAsync(msg)
+				shuffledIndex += 1
+				if shuffledIndex > #shuffledPromo then
+					shuffledPromo = shuffle(promoMessages)
+					shuffledIndex = 1
+				end
+			end
+		end
+		task.wait(27)
+	end
+end)
+
+-- Button Logic
+ThankButton.MouseButton1Click:Connect(function()
+	getgenv().autoThank = not getgenv().autoThank
+	updateGUI()
+end)
+
+PromoButton.MouseButton1Click:Connect(function()
+	getgenv().promoSpam = not getgenv().promoSpam
+	updateGUI()
+end)
