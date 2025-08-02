@@ -64,6 +64,7 @@ end
 
 updateGUI()
 
+
 -- Messages
 local thankMessages = {
     "You donated?! My booth just exploded with happiness, and my avatar did a backflip it didn’t even know it could do 😆 Thank you so much! 😊",
@@ -905,7 +906,7 @@ task.spawn(function()
 				end
 			end
 		end
-		task.wait(27)
+		task.wait(20)
 	end
 end)
 
