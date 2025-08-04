@@ -552,7 +552,7 @@ task.spawn(function()
 				end
 			end
 		end
-		task.wait(27)
+		task.wait(17)
 	end
 end)
 
