@@ -198,7 +198,6 @@ local thankMessages = {
 }
 
 local promoMessages = {
-    "Thank you so much! With that donation, my avatar can finally stop eating imaginary noodles. Ramen is great, but air ramen? Not so much.",
 }
 
 -- Index trackers
