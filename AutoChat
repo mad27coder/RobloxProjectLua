@@ -1,4 +1,4 @@
--- Pengaturan awal (ubah ke false agar tidak aktif saat mulai)
+-- Pengaturan awal
 getgenv().autoThank = false
 getgenv().promoSpam = false
 
@@ -11,70 +11,59 @@ local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGener
 
 -- Anti-AFK
 Players.LocalPlayer.Idled:Connect(function()
-	local vu = game:GetService("VirtualUser")
-	vu:CaptureController()
-	vu:ClickButton1(Vector2.new(0, 0))
+	VirtualUser:CaptureController()
+	VirtualUser:ClickButton1(Vector2.new(0, 0))
 end)
 
 -- GUI Setup
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = localPlayer:WaitForChild("PlayerGui")
+local ScreenGui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
 ScreenGui.Name = "AutoGUI"
 ScreenGui.ResetOnSpawn = false
 
-local Frame = Instance.new("Frame")
+local Frame = Instance.new("Frame", ScreenGui)
 Frame.Size = UDim2.new(0, 220, 0, 160)
 Frame.Position = UDim2.new(0.5, -110, 0.5, -80)
 Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.Active = true
 Frame.Draggable = true
-Frame.Parent = ScreenGui
 
--- Tombol Toggle GUI
-local toggleButton = Instance.new("TextButton")
+local toggleButton = Instance.new("TextButton", ScreenGui)
 toggleButton.Size = UDim2.new(0, 40, 0, 40)
 toggleButton.Position = UDim2.new(1, -45, 0.5, -20)
 toggleButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
 toggleButton.TextColor3 = Color3.new(1, 1, 1)
 toggleButton.Text = "≡"
-toggleButton.Parent = ScreenGui
 toggleButton.ZIndex = 10
 toggleButton.Active = true
 toggleButton.Draggable = true
 
--- Status visibilitas
 local guiVisible = true
-
 toggleButton.MouseButton1Click:Connect(function()
 	guiVisible = not guiVisible
 	Frame.Visible = guiVisible
 end)
 
--- Elemen GUI
-local ThankButton = Instance.new("TextButton")
+-- GUI Elements
+local ThankButton = Instance.new("TextButton", Frame)
 ThankButton.Size = UDim2.new(0, 200, 0, 40)
 ThankButton.Position = UDim2.new(0, 10, 0, 10)
 ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 ThankButton.TextColor3 = Color3.new(1, 1, 1)
-ThankButton.Parent = Frame
 
-local PromoButton = Instance.new("TextButton")
+local PromoButton = Instance.new("TextButton", Frame)
 PromoButton.Size = UDim2.new(0, 200, 0, 40)
 PromoButton.Position = UDim2.new(0, 10, 0, 60)
 PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 PromoButton.TextColor3 = Color3.new(1, 1, 1)
-PromoButton.Parent = Frame
 
-local StatusLabel = Instance.new("TextLabel")
+local StatusLabel = Instance.new("TextLabel", Frame)
 StatusLabel.Size = UDim2.new(0, 200, 0, 20)
 StatusLabel.Position = UDim2.new(0, 10, 0, 105)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.TextColor3 = Color3.new(1, 1, 1)
 StatusLabel.TextScaled = true
-StatusLabel.Parent = Frame
 
--- Label Nama di bagian bawah GUI
-local SignatureLabel = Instance.new("TextLabel")
+local SignatureLabel = Instance.new("TextLabel", Frame)
 SignatureLabel.Size = UDim2.new(0, 200, 0, 20)
 SignatureLabel.Position = UDim2.new(0, 10, 1, -25)
 SignatureLabel.BackgroundTransparency = 1
@@ -82,9 +71,7 @@ SignatureLabel.TextColor3 = Color3.new(1, 1, 1)
 SignatureLabel.Text = "LYNX x DHINZ"
 SignatureLabel.Font = Enum.Font.SourceSansBold
 SignatureLabel.TextScaled = true
-SignatureLabel.Parent = Frame
 
--- Update GUI text sesuai status awal
 local function updateGUI()
 	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
 	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
@@ -671,29 +658,15 @@ local promoMessages = {
     "Jokes for everyone—just 1 Robux."
 }
 
--- Index trackers
-local thankIndex = 1
-local promoIndex = 1
+-- Promo Delay System
+local promoDelayUntil = 0
+local promoPauseOnDonation = 36
 
--- Auto Thank Logic (berurutan)
-local leaderstats = localPlayer:WaitForChild("leaderstats")
-local raisedStat = leaderstats:WaitForChild("Raised")
-local lastRaised = raisedStat.Value
+local function getRandomPromoInterval()
+	return math.random(15, 20)
+end
 
-raisedStat.Changed:Connect(function()
-	if getgenv().autoThank then
-		local newRaised = raisedStat.Value
-		if newRaised > lastRaised then
-			if chat then
-				local msg = thankMessages[math.random(1, #thankMessages)]
-				chat:SendAsync(msg)
-			end
-			lastRaised = newRaised
-		end
-	end
-end)
-
--- Auto Promo Logic (berurutan tiap 27 detik)
+-- Shuffle function
 local function shuffle(array)
 	local shuffled = {}
 	local indices = {}
@@ -711,21 +684,46 @@ end
 local shuffledPromo = shuffle(promoMessages)
 local shuffledIndex = 1
 
+-- Auto Promo Logic
 task.spawn(function()
 	while true do
 		if getgenv().promoSpam then
-			if chat then
-				local msg = shuffledPromo[shuffledIndex]
-				chat:SendAsync(msg)
-				shuffledIndex += 1
-				if shuffledIndex > #shuffledPromo then
-					shuffledPromo = shuffle(promoMessages)
-					shuffledIndex = 1
+			local currentTime = tick()
+			if currentTime >= promoDelayUntil then
+				if chat then
+					local msg = shuffledPromo[shuffledIndex]
+					chat:SendAsync(msg)
+					shuffledIndex += 1
+					if shuffledIndex > #shuffledPromo then
+						shuffledPromo = shuffle(promoMessages)
+						shuffledIndex = 1
+					end
 				end
+				promoDelayUntil = currentTime + getRandomPromoInterval()
 			end
 		end
-		task.wait(16)
+		task.wait(1)
 	end
+end)
+
+-- Auto Thank Logic + Promo Pause Trigger
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local raisedStat = leaderstats:WaitForChild("Raised")
+local lastRaised = raisedStat.Value
+
+raisedStat.Changed:Connect(function()
+	if getgenv().autoThank then
+		local newRaised = raisedStat.Value
+		if newRaised > lastRaised then
+			if chat then
+				local msg = thankMessages[math.random(1, #thankMessages)]
+				chat:SendAsync(msg)
+			end
+			lastRaised = newRaised
+		end
+	end
+	-- Pause promo for 36 seconds
+	promoDelayUntil = tick() + promoPauseOnDonation
 end)
 
 -- Button Logic
