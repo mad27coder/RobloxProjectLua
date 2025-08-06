@@ -1,0 +1,129 @@
+-- Pengaturan awal
+getgenv().autoThank = false
+
+-- Services
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+local VirtualUser = game:GetService("VirtualUser")
+local RunService = game:GetService("RunService")
+local localPlayer = Players.LocalPlayer
+local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
+
+-- Anti-AFK
+Players.LocalPlayer.Idled:Connect(function()
+	VirtualUser:CaptureController()
+	VirtualUser:ClickButton1(Vector2.new(0, 0))
+end)
+
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
+ScreenGui.Name = "AutoGUI"
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 180, 0, 100)
+Frame.Position = UDim2.new(0.5, -90, 0.5, -50)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+
+-- RGB Border Line
+local Border = Instance.new("Frame", Frame)
+Border.Size = UDim2.new(1, 4, 1, 4)
+Border.Position = UDim2.new(0, -2, 0, -2)
+Border.BackgroundTransparency = 1
+Border.BorderSizePixel = 2
+Border.BorderMode = Enum.BorderMode.Inset
+Border.ZIndex = 0
+
+-- RGB Animation
+task.spawn(function()
+	local hue = 0
+	while true do
+		hue = (hue + 1) % 360
+		local color = Color3.fromHSV(hue / 360, 1, 1)
+		Border.BorderColor3 = color
+		task.wait(0.05)
+	end
+end)
+
+-- Toggle Button
+local toggleButton = Instance.new("TextButton", ScreenGui)
+toggleButton.Size = UDim2.new(0, 30, 0, 30)
+toggleButton.Position = UDim2.new(1, -35, 0.5, -15)
+toggleButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Text = "≡"
+toggleButton.ZIndex = 10
+toggleButton.Active = true
+toggleButton.Draggable = true
+
+local guiVisible = true
+toggleButton.MouseButton1Click:Connect(function()
+	guiVisible = not guiVisible
+	Frame.Visible = guiVisible
+end)
+
+-- GUI Elements
+local ThankButton = Instance.new("TextButton", Frame)
+ThankButton.Size = UDim2.new(1, -20, 0, 30)
+ThankButton.Position = UDim2.new(0, 10, 0, 10)
+ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ThankButton.TextColor3 = Color3.new(1, 1, 1)
+ThankButton.Font = Enum.Font.SourceSansBold
+ThankButton.TextSize = 16
+
+local StatusLabel = Instance.new("TextLabel", Frame)
+StatusLabel.Size = UDim2.new(1, -20, 0, 20)
+StatusLabel.Position = UDim2.new(0, 10, 0, 45)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.TextColor3 = Color3.new(1, 1, 1)
+StatusLabel.TextScaled = true
+StatusLabel.Font = Enum.Font.SourceSansBold
+
+local SignatureLabel = Instance.new("TextLabel", Frame)
+SignatureLabel.Size = UDim2.new(1, -20, 0, 20)
+SignatureLabel.Position = UDim2.new(0, 10, 1, -25)
+SignatureLabel.BackgroundTransparency = 1
+SignatureLabel.TextColor3 = Color3.new(1, 1, 1)
+SignatureLabel.Text = "LYNX x DHINZ"
+SignatureLabel.Font = Enum.Font.SourceSansBold
+SignatureLabel.TextScaled = true
+
+-- Update GUI
+local function updateGUI()
+	ThankButton.Text = "Auto Thank: " .. (getgenv().autoThank and "ON" or "OFF")
+	StatusLabel.Text = "Status: " .. (getgenv().autoThank and "Aktif" or "Nonaktif")
+end
+
+updateGUI()
+
+-- Thank Messages
+local thankMessages = {
+	"Thank you so much! With that donation, my avatar can finally stop eating imaginary noodles. Ramen is great, but air ramen? Not so much.",
+}
+
+-- Auto Thank Logic
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local raisedStat = leaderstats:WaitForChild("Raised")
+local lastRaised = raisedStat.Value
+
+raisedStat.Changed:Connect(function()
+	if getgenv().autoThank then
+		local newRaised = raisedStat.Value
+		if newRaised > lastRaised then
+			if chat then
+				local msg = thankMessages[math.random(1, #thankMessages)]
+				chat:SendAsync(msg)
+			end
+			lastRaised = newRaised
+		end
+	end
+end)
+
+-- Button Logic
+ThankButton.MouseButton1Click:Connect(function()
+	getgenv().autoThank = not getgenv().autoThank
+	updateGUI()
+end)
