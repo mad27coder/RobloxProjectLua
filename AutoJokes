@@ -93,7 +93,7 @@ SignatureLabel.TextScaled = true
 
 -- Update GUI
 local function updateGUI()
-	ThankButton.Text = "Auto Thank: " .. (getgenv().autoThank and "ON" or "OFF")
+	ThankButton.Text = "Auto Jokes: " .. (getgenv().autoThank and "ON" or "OFF")
 	StatusLabel.Text = "Status: " .. (getgenv().autoThank and "Aktif" or "Nonaktif")
 end
 
