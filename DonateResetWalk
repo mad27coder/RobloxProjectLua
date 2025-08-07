@@ -9,6 +9,58 @@ local VirtualUser = game:GetService("VirtualUser")
 local localPlayer = Players.LocalPlayer
 local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
 
+local marker = nil
+
+local function createDeathMarker(position)
+	if marker then marker:Destroy() end
+	marker = Instance.new("Part")
+	marker.Anchored = true
+	marker.CanCollide = false
+	marker.Size = Vector3.new(1,1,1)
+	marker.Position = position
+	marker.Transparency = 1
+	marker.Name = "DeathMarker"
+	marker.Parent = workspace
+end
+
+local function destroySit(humanoid)
+	task.spawn(function()
+		while humanoid and humanoid.Parent do
+			humanoid.Sit = false
+			humanoid.SeatPart = nil
+			task.wait(0.1)
+		end
+	end)
+end
+
+local function flyToMarker(humanoid, root)
+	if not marker then return end
+
+	local targetPos = marker.Position + Vector3.new(0, 5, 0)
+	local ascendTarget = root.Position + Vector3.new(0, 5, 0)
+
+	local bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+	bv.Velocity = Vector3.zero
+	bv.Parent = root
+
+	while (root.Position - ascendTarget).Magnitude > 0.5 do
+		local direction = (ascendTarget - root.Position).Unit
+		bv.Velocity = direction * 20
+		task.wait(0.05)
+	end
+
+	while (root.Position - targetPos).Magnitude > 1.5 do
+		local direction = (targetPos - root.Position).Unit
+		bv.Velocity = direction * 30
+		task.wait(0.05)
+	end
+
+	bv:Destroy()
+	marker:Destroy()
+	marker = nil
+end
+
 -- Anti-AFK
 Players.LocalPlayer.Idled:Connect(function()
 	VirtualUser:CaptureController()
@@ -79,6 +131,28 @@ local function updateGUI()
 end
 
 updateGUI()
+
+local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+local root = char:WaitForChild("HumanoidRootPart")
+
+destroySit(humanoid)
+createDeathMarker(root.Position)
+
+task.delay(0.5, function()
+	char:BreakJoints()
+
+	task.delay(1, function()
+		localPlayer:LoadCharacter()
+
+		local newChar = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local newHumanoid = newChar:WaitForChild("Humanoid")
+		local newRoot = newChar:WaitForChild("HumanoidRootPart")
+
+		destroySit(newHumanoid)
+		flyToMarker(newHumanoid, newRoot)
+	end)
+end)
 
 -- Messages
 local thankMessages = {
@@ -160,102 +234,6 @@ lastRaised = newRaised
 	end
 	-- Pause promo for 36 seconds
 	promoDelayUntil = tick() + promoPauseOnDonation
-end)
-
--- LocalScript (StarterPlayerScripts)
-local Players = game:GetService("Players")
-local StarterGui = game:GetService("StarterGui")
-local player = Players.LocalPlayer
-local marker = nil
-
--- ✅ Notifikasi saat script aktif
-StarterGui:SetCore("SendNotification", {
-	Title = "✅ Script Executed",
-	Text = "Death marker & auto-fly enabled.",
-	Duration = 4
-})
-
--- Utility: Buat marker di posisi kematian
-local function createDeathMarker(position)
-	if marker then marker:Destroy() end
-
-	marker = Instance.new("Part")
-	marker.Anchored = true
-	marker.CanCollide = false
-	marker.Size = Vector3.new(1,1,1)
-	marker.Position = position
-	marker.Transparency = 1
-	marker.Name = "DeathMarker"
-	marker.Parent = workspace
-end
-
--- Utility: Anti-sit brutal
-local function destroySit(humanoid)
-	task.spawn(function()
-		while humanoid and humanoid.Parent do
-			humanoid.Sit = false
-			humanoid.SeatPart = nil
-			task.wait(0.1)
-		end
-	end)
-end
-
--- Utility: Fly ke marker dengan takeoff dulu
-local function flyToMarker(humanoid, root)
-	if not marker then return end
-
-	local targetPos = marker.Position + Vector3.new(0, 5, 0)
-	local ascendTarget = root.Position + Vector3.new(0, 5, 0)
-
-	local bv = Instance.new("BodyVelocity")
-	bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-	bv.Velocity = Vector3.zero
-	bv.Parent = root
-
-	-- Step 1: Naik vertikal dulu
-	while (root.Position - ascendTarget).Magnitude > 0.5 do
-		local direction = (ascendTarget - root.Position).Unit
-		bv.Velocity = direction * 20
-		task.wait(0.05)
-	end
-
-	-- Step 2: Terbang ke marker
-	while (root.Position - targetPos).Magnitude > 1.5 do
-		local direction = (targetPos - root.Position).Unit
-		bv.Velocity = direction * 30
-		task.wait(0.05)
-	end
-
-	bv:Destroy()
-	marker:Destroy()
-	marker = nil
-end
-
--- Main logic
-player.CharacterAdded:Connect(function(char)
-	local humanoid = char:WaitForChild("Humanoid")
-
-	-- Anti-sit
-	destroySit(humanoid)
-
-	-- Buat marker saat mati
-	humanoid.Died:Connect(function()
-		local root = char:FindFirstChild("HumanoidRootPart")
-		if root then
-			createDeathMarker(root.Position)
-		end
-	end)
-
-	-- Setelah respawn, fly ke marker
-	task.spawn(function()
-		local root
-		repeat
-			root = char:FindFirstChild("HumanoidRootPart")
-			task.wait()
-		until root
-
-		flyToMarker(humanoid, root)
-	end)
 end)
 
 -- Button Logic
