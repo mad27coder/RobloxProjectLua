@@ -1,23 +1,31 @@
--- Pengaturan awal
+-- 🌐 Global Settings
 getgenv().autoThank = false
 getgenv().promoSpam = false
-getgenv().autoWalk = false
+getgenv().autoFlyToDeath = true
 
--- Services
+-- 📦 Services
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local VirtualUser = game:GetService("VirtualUser")
-local localPlayer = Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
+local player = Players.LocalPlayer
 local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
 
--- Anti-AFK
-Players.LocalPlayer.Idled:Connect(function()
+-- 💤 Anti-AFK
+player.Idled:Connect(function()
 	VirtualUser:CaptureController()
 	VirtualUser:ClickButton1(Vector2.new(0, 0))
 end)
 
--- GUI Setup
-local ScreenGui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
+-- ✅ Notification
+StarterGui:SetCore("SendNotification", {
+	Title = "✅ Script Executed",
+	Text = "Auto Thank, Promo, Death Marker & Fly enabled.",
+	Duration = 4
+})
+
+-- 🖼 GUI Setup
+local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 ScreenGui.Name = "AutoGUI"
 ScreenGui.ResetOnSpawn = false
 
@@ -44,7 +52,7 @@ toggleButton.MouseButton1Click:Connect(function()
 	Frame.Visible = guiVisible
 end)
 
--- GUI Elements
+-- 🧩 GUI Elements
 local ThankButton = Instance.new("TextButton", Frame)
 ThankButton.Size = UDim2.new(0, 200, 0, 40)
 ThankButton.Position = UDim2.new(0, 10, 0, 10)
@@ -57,11 +65,11 @@ PromoButton.Position = UDim2.new(0, 10, 0, 60)
 PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 PromoButton.TextColor3 = Color3.new(1, 1, 1)
 
-local WalkButton = Instance.new("TextButton", Frame)
-WalkButton.Size = UDim2.new(0, 200, 0, 40)
-WalkButton.Position = UDim2.new(0, 10, 0, 110)
-WalkButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-WalkButton.TextColor3 = Color3.new(1, 1, 1)
+local FlyToggle = Instance.new("TextButton", Frame)
+FlyToggle.Size = UDim2.new(0, 200, 0, 40)
+FlyToggle.Position = UDim2.new(0, 10, 0, 110)
+FlyToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+FlyToggle.TextColor3 = Color3.new(1, 1, 1)
 
 local StatusLabel = Instance.new("TextLabel", Frame)
 StatusLabel.Size = UDim2.new(0, 200, 0, 20)
@@ -82,31 +90,15 @@ SignatureLabel.TextScaled = true
 local function updateGUI()
 	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
 	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
-	WalkButton.Text = "Toggle Auto Walk (" .. (getgenv().autoWalk and "ON" or "OFF") .. ")"
+	FlyToggle.Text = "Toggle Auto Fly (" .. (getgenv().autoFlyToDeath and "ON" or "OFF") .. ")"
 	StatusLabel.Text = "Status: Thank " .. (getgenv().autoThank and "ON" or "OFF") ..
 		" / Promo " .. (getgenv().promoSpam and "ON" or "OFF") ..
-		" / Walk " .. (getgenv().autoWalk and "ON" or "OFF")
+		" / Fly " .. (getgenv().autoFlyToDeath and "ON" or "OFF")
 end
 
 updateGUI()
 
--- Button Logic
-ThankButton.MouseButton1Click:Connect(function()
-	getgenv().autoThank = not getgenv().autoThank
-	updateGUI()
-end)
-
-PromoButton.MouseButton1Click:Connect(function()
-	getgenv().promoSpam = not getgenv().promoSpam
-	updateGUI()
-end)
-
-WalkButton.MouseButton1Click:Connect(function()
-	getgenv().autoWalk = not getgenv().autoWalk
-	updateGUI()
-end)
-
--- Messages
+-- 💬 Messages
 local thankMessages = {
 	"Thank you so much! With that donation, my avatar can finally stop eating imaginary noodles. Ramen is great, but air ramen? Not so much.",
 }
@@ -117,7 +109,7 @@ local promoMessages = {
 	"Thanks for being awesome! Keep the support coming!",
 }
 
--- Promo Delay System
+-- ⏱ Promo Delay System
 local promoDelayUntil = 0
 local promoPauseOnDonation = 36
 
@@ -125,10 +117,9 @@ local function getRandomPromoInterval()
 	return math.random(15, 20)
 end
 
--- Shuffle function
+-- 🔀 Shuffle
 local function shuffle(array)
-	local shuffled = {}
-	local indices = {}
+	local shuffled, indices = {}, {}
 	for i = 1, #array do table.insert(indices, i) end
 	for i = #indices, 2, -1 do
 		local j = math.random(i)
@@ -143,7 +134,7 @@ end
 local shuffledPromo = shuffle(promoMessages)
 local shuffledIndex = 1
 
--- Auto Promo Logic
+-- 🚀 Auto Promo Logic
 task.spawn(function()
 	while true do
 		if getgenv().promoSpam then
@@ -165,34 +156,53 @@ task.spawn(function()
 	end
 end)
 
--- Auto Thank Logic + Promo Pause + Delayed Character Reset
-local leaderstats = localPlayer:WaitForChild("leaderstats")
+-- 🙏 Auto Thank Logic + BreakJoints + Promo Pause
+local leaderstats = player:WaitForChild("leaderstats")
 local raisedStat = leaderstats:WaitForChild("Raised")
 local lastRaised = raisedStat.Value
 
 raisedStat.Changed:Connect(function()
-	local newRaised = raisedStat.Value
-	if newRaised > lastRaised then
-		if getgenv().autoThank and chat then
-			local msg = thankMessages[math.random(1, #thankMessages)]
-			chat:SendAsync(msg)
-		end
-		lastRaised = newRaised
-		promoDelayUntil = tick() + promoPauseOnDonation
-		task.delay(15, function()
-			if localPlayer.Character then
-				localPlayer:LoadCharacter()
+	if getgenv().autoThank then
+		local newRaised = raisedStat.Value
+		if newRaised > lastRaised then
+			if chat then
+				local msg = thankMessages[math.random(1, #thankMessages)]
+				chat:SendAsync(msg)
 			end
-		end)
+			lastRaised = newRaised
+
+			-- 💥 Break joints after 5 seconds
+			task.delay(5, function()
+				if player.Character then
+					player.Character:BreakJoints()
+				end
+			end)
+		end
 	end
+	promoDelayUntil = tick() + promoPauseOnDonation
 end)
 
--- 🧠 Auto Walk to Death Marker Logic
+-- 🧠 Button Logic
+ThankButton.MouseButton1Click:Connect(function()
+	getgenv().autoThank = not getgenv().autoThank
+	updateGUI()
+end)
+
+PromoButton.MouseButton1Click:Connect(function()
+	getgenv().promoSpam = not getgenv().promoSpam
+	updateGUI()
+end)
+
+FlyToggle.MouseButton1Click:Connect(function()
+	getgenv().autoFlyToDeath = not getgenv().autoFlyToDeath
+	updateGUI()
+end)
+
+-- 🪦 Death Marker + Auto Fly
 local marker = nil
 
 local function createDeathMarker(position)
 	if marker then marker:Destroy() end
-
 	marker = Instance.new("Part")
 	marker.Anchored = true
 	marker.CanCollide = false
@@ -203,27 +213,16 @@ local function createDeathMarker(position)
 	marker.Parent = workspace
 end
 
-local function walkToMarker(humanoid, root)
-	if not marker or not getgenv().autoWalk then return end
-
-	local reached = false
-	while not reached and humanoid and root and getgenv().autoWalk do
-		humanoid:MoveTo(marker.Position)
-		local dist = (root.Position - marker.Position).Magnitude
-		if dist < 4 then
-			reached = true
+local function destroySit(humanoid)
+	task.spawn(function()
+		while humanoid and humanoid.Parent do
+			humanoid.Sit = false
+			humanoid.SeatPart = nil
+			task.wait(0.1)
 		end
-		task.wait(0.2)
-	end
-
-	if marker then
-		marker:Destroy()
-		marker = nil
-	end
+	end)
 end
 
-localPlayer.CharacterAdded:Connect(function(char)
-	local humanoid = char:WaitForChild("Humanoid")
-
-	humanoid.Died:Connect(function()
-		local root = char:FindFirstChild("HumanoidRoot
+local function flyToMarker(humanoid, root)
+	if not marker then return end
+	local targetPos = marker.Position + Vector3.new(0, 5, 0)
