@@ -1,0 +1,208 @@
+-- Pengaturan awal
+getgenv().autoThank = false
+getgenv().promoSpam = false
+
+-- Services
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+local VirtualUser = game:GetService("VirtualUser")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local localPlayer = Players.LocalPlayer
+local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
+
+-- Anti-AFK
+Players.LocalPlayer.Idled:Connect(function()
+	VirtualUser:CaptureController()
+	VirtualUser:ClickButton1(Vector2.new(0, 0))
+end)
+
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
+ScreenGui.Name = "AutoGUI"
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 220, 0, 210)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -105)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.Active = true
+Frame.Draggable = true
+
+local toggleButton = Instance.new("TextButton", ScreenGui)
+toggleButton.Size = UDim2.new(0, 40, 0, 40)
+toggleButton.Position = UDim2.new(1, -45, 0.5, -20)
+toggleButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Text = "≡"
+toggleButton.ZIndex = 10
+toggleButton.Active = true
+toggleButton.Draggable = true
+
+local guiVisible = true
+toggleButton.MouseButton1Click:Connect(function()
+	guiVisible = not guiVisible
+	Frame.Visible = guiVisible
+end)
+
+-- GUI Elements
+local ThankButton = Instance.new("TextButton", Frame)
+ThankButton.Size = UDim2.new(0, 200, 0, 40)
+ThankButton.Position = UDim2.new(0, 10, 0, 10)
+ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ThankButton.TextColor3 = Color3.new(1, 1, 1)
+
+local PromoButton = Instance.new("TextButton", Frame)
+PromoButton.Size = UDim2.new(0, 200, 0, 40)
+PromoButton.Position = UDim2.new(0, 10, 0, 60)
+PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+PromoButton.TextColor3 = Color3.new(1, 1, 1)
+
+local ManualLaunchButton = Instance.new("TextButton", Frame)
+ManualLaunchButton.Size = UDim2.new(0, 200, 0, 40)
+ManualLaunchButton.Position = UDim2.new(0, 10, 0, 110)
+ManualLaunchButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+ManualLaunchButton.TextColor3 = Color3.new(1, 1, 1)
+ManualLaunchButton.Text = "Manual Launch"
+
+local AutoLaunchToggle = Instance.new("TextButton", Frame)
+AutoLaunchToggle.Size = UDim2.new(0, 200, 0, 20)
+AutoLaunchToggle.Position = UDim2.new(0, 10, 0, 155)
+AutoLaunchToggle.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+AutoLaunchToggle.TextColor3 = Color3.new(1, 1, 1)
+AutoLaunchToggle.TextScaled = true
+AutoLaunchToggle.Text = "Auto Launch: ON"
+
+local StatusLabel = Instance.new("TextLabel", Frame)
+StatusLabel.Size = UDim2.new(0, 200, 0, 20)
+StatusLabel.Position = UDim2.new(0, 10, 0, 180)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.TextColor3 = Color3.new(1, 1, 1)
+StatusLabel.TextScaled = true
+
+local SignatureLabel = Instance.new("TextLabel", Frame)
+SignatureLabel.Size = UDim2.new(0, 200, 0, 20)
+SignatureLabel.Position = UDim2.new(0, 10, 1, -25)
+SignatureLabel.BackgroundTransparency = 1
+SignatureLabel.TextColor3 = Color3.new(1, 1, 1)
+SignatureLabel.Text = "LYNX x DHINZ"
+SignatureLabel.Font = Enum.Font.SourceSansBold
+SignatureLabel.TextScaled = true
+
+local function updateGUI()
+	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
+	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
+	StatusLabel.Text = "Status: Thank " .. (getgenv().autoThank and "ON" or "OFF") .. " / Promo " .. (getgenv().promoSpam and "ON" or "OFF")
+end
+
+updateGUI()
+
+-- Messages
+local thankMessages = {
+	"Thank you for donations, launched in 3 seconds",
+}
+
+local promoMessages = {
+	"Donate For Launched My Self",
+}
+
+-- Promo Delay System
+local promoDelayUntil = 0
+local promoPauseOnDonation = 60
+
+local function getRandomPromoInterval()
+	return math.random(15, 20)
+end
+
+-- Shuffle function
+local function shuffle(array)
+	local shuffled = {}
+	local indices = {}
+	for i = 1, #array do table.insert(indices, i) end
+	for i = #indices, 2, -1 do
+		local j = math.random(i)
+		indices[i], indices[j] = indices[j], indices[i]
+	end
+	for _, i in ipairs(indices) do
+		table.insert(shuffled, array[i])
+	end
+	return shuffled
+end
+
+local shuffledPromo = shuffle(promoMessages)
+local shuffledIndex = 1
+
+-- Auto Promo Logic
+task.spawn(function()
+	while true do
+		if getgenv().promoSpam then
+			local currentTime = tick()
+			if currentTime >= promoDelayUntil then
+				if chat then
+					local msg = shuffledPromo[shuffledIndex]
+					chat:SendAsync(msg)
+					shuffledIndex += 1
+					if shuffledIndex > #shuffledPromo then
+						shuffledPromo = shuffle(promoMessages)
+						shuffledIndex = 1
+					end
+				end
+				promoDelayUntil = currentTime + getRandomPromoInterval()
+			end
+		end
+		task.wait(1)
+	end
+end)
+
+-- Rocket Launch System
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local root = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+
+local autoLaunchEnabled = true
+local isLaunching = false
+
+AutoLaunchToggle.MouseButton1Click:Connect(function()
+	autoLaunchEnabled = not autoLaunchEnabled
+	AutoLaunchToggle.Text = "Auto Launch: " .. (autoLaunchEnabled and "ON" or "OFF")
+	AutoLaunchToggle.BackgroundColor3 = autoLaunchEnabled and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(40, 40, 40)
+end)
+
+ManualLaunchButton.MouseButton1Click:Connect(function()
+	if not isLaunching then
+		launchRocket()
+	end
+end)
+
+function launchRocket()
+	isLaunching = true
+	humanoid.PlatformStand = true
+	humanoid.AutoRotate = false
+
+	local initialPosition = root.Position
+	local platform = Instance.new("Part")
+	platform.Anchored = true
+	platform.CanCollide = false
+	platform.Transparency = 1
+	platform.Size = Vector3.new(6, 1, 6)
+	platform.Position = initialPosition
+	platform.Parent = workspace
+
+	local spin = Instance.new("BodyAngularVelocity")
+	spin.AngularVelocity = Vector3.new(0, math.rad(6000), 0)
+	spin.MaxTorque = Vector3.new(0, math.huge, 0)
+	spin.P = 10000
+	spin.Parent = root
+
+	local uprightGyro = Instance.new("BodyGyro")
+	uprightGyro.MaxTorque = Vector3.new(400000, 0, 400000)
+	uprightGyro.P = 10000
+	uprightGyro.CFrame = root.CFrame
+	uprightGyro.Parent = root
+
+	local follow = Instance.new("BodyPosition")
+	follow.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+	follow.P = 10000
+	follow.D = 100
+	follow.Position = platform.Position + Vector3.new(0, 5, 0
