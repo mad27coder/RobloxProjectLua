@@ -1,152 +1,48 @@
--- 🌟 Global Toggles
-getgenv().autoThank = false
-getgenv().promoSpam = false
-getgenv().autoLaunch = true
-
--- 🔧 Services
-local Players = game:GetService("Players")
-local TextChatService = game:GetService("TextChatService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local VirtualUser = game:GetService("VirtualUser")
+local Players = game:GetService("Players")
 
-local localPlayer = Players.LocalPlayer
-local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
-local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
 local root = character:WaitForChild("HumanoidRootPart")
 local humanoid = character:WaitForChild("Humanoid")
 
--- 💤 Anti-AFK
-localPlayer.Idled:Connect(function()
-	VirtualUser:CaptureController()
-	VirtualUser:ClickButton1(Vector2.new(0, 0))
-end)
-
--- 🎛️ GUI Setup
-local screenGui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
-screenGui.Name = "AutoGUI"
+-- 🧩 GUI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RocketGui"
 screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 220, 0, 200)
-frame.Position = UDim2.new(0.5, -110, 0.5, -100)
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 150, 0, 60)
+frame.Position = UDim2.new(0, 20, 0, 100)
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BorderSizePixel = 0
 frame.Active = true
 frame.Draggable = true
+frame.Parent = screenGui
 
-local toggleButton = Instance.new("TextButton", screenGui)
-toggleButton.Size = UDim2.new(0, 40, 0, 40)
-toggleButton.Position = UDim2.new(1, -45, 0.5, -20)
-toggleButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
-toggleButton.TextColor3 = Color3.new(1, 1, 1)
-toggleButton.Text = "≡"
-toggleButton.ZIndex = 10
-toggleButton.Active = true
-toggleButton.Draggable = true
+local launchButton = Instance.new("TextButton")
+launchButton.Size = UDim2.new(1, -20, 1, -20)
+launchButton.Position = UDim2.new(0, 10, 0, 10)
+launchButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+launchButton.TextColor3 = Color3.new(1, 1, 1)
+launchButton.Font = Enum.Font.GothamBold
+launchButton.TextSize = 18
+launchButton.Text = "LAUNCH"
+launchButton.Parent = frame
 
-local guiVisible = true
-toggleButton.MouseButton1Click:Connect(function()
-	guiVisible = not guiVisible
-	frame.Visible = guiVisible
-end)
-
--- 🎛️ GUI Elements
-local ThankButton = Instance.new("TextButton", frame)
-ThankButton.Size = UDim2.new(0, 200, 0, 40)
-ThankButton.Position = UDim2.new(0, 10, 0, 10)
-ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-ThankButton.TextColor3 = Color3.new(1, 1, 1)
-
-local PromoButton = Instance.new("TextButton", frame)
-PromoButton.Size = UDim2.new(0, 200, 0, 40)
-PromoButton.Position = UDim2.new(0, 10, 0, 60)
-PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-PromoButton.TextColor3 = Color3.new(1, 1, 1)
-
-local LaunchButton = Instance.new("TextButton", frame)
-LaunchButton.Size = UDim2.new(0, 200, 0, 40)
-LaunchButton.Position = UDim2.new(0, 10, 0, 110)
-LaunchButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-LaunchButton.TextColor3 = Color3.new(1, 1, 1)
-
-local StatusLabel = Instance.new("TextLabel", frame)
-StatusLabel.Size = UDim2.new(0, 200, 0, 20)
-StatusLabel.Position = UDim2.new(0, 10, 0, 160)
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.TextColor3 = Color3.new(1, 1, 1)
-StatusLabel.TextScaled = true
-
-local function updateGUI()
-	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
-	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
-	LaunchButton.Text = "Toggle Auto Launch (" .. (getgenv().autoLaunch and "ON" or "OFF") .. ")"
-	StatusLabel.Text = "Status: Thank " .. (getgenv().autoThank and "ON" or "OFF") ..
-		" / Promo " .. (getgenv().promoSpam and "ON" or "OFF") ..
-		" / Launch " .. (getgenv().autoLaunch and "ON" or "OFF")
-end
-
-updateGUI()
-
--- 💬 Messages
-local thankMessages = {
-	"Thank you so much! With that donation, my avatar can finally stop eating imaginary noodles.",
-}
-
-local promoMessages = {
-	"Support the cause! Every bit helps. 💖",
-	"Join the movement! Your donation makes a difference.",
-	"Thanks for being awesome! Keep the support coming!",
-}
-
--- 🔁 Promo System
-local promoDelayUntil = 0
-local promoPauseOnDonation = 36
-
-local function getRandomPromoInterval()
-	return math.random(15, 20)
-end
-
-local function shuffle(array)
-	local shuffled = {}
-	local indices = {}
-	for i = 1, #array do table.insert(indices, i) end
-	for i = #indices, 2, -1 do
-		local j = math.random(i)
-		indices[i], indices[j] = indices[j], indices[i]
-	end
-	for _, i in ipairs(indices) do
-		table.insert(shuffled, array[i])
-	end
-	return shuffled
-end
-
-local shuffledPromo = shuffle(promoMessages)
-local shuffledIndex = 1
-
-task.spawn(function()
-	while true do
-		if getgenv().promoSpam and tick() >= promoDelayUntil then
-			if chat then
-				local msg = shuffledPromo[shuffledIndex]
-				chat:SendAsync(msg)
-				shuffledIndex += 1
-				if shuffledIndex > #shuffledPromo then
-					shuffledPromo = shuffle(promoMessages)
-					shuffledIndex = 1
-				end
-			end
-			promoDelayUntil = tick() + getRandomPromoInterval()
-		end
-		task.wait(1)
-	end
-end)
-
--- 🚀 Rocket Launch System
+-- 🚀 Launch Logic
 local isLaunching = false
 
 local function startRocketSequence()
 	if isLaunching then return end
 	isLaunching = true
+
+	launchButton.Text = "LAUNCHED"
+	launchButton.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+	launchButton.AutoButtonColor = false
+	launchButton.Active = false
 
 	humanoid.PlatformStand = true
 	humanoid.AutoRotate = false
@@ -161,7 +57,7 @@ local function startRocketSequence()
 	platform.Parent = workspace
 
 	local spin = Instance.new("BodyAngularVelocity")
-	spin.AngularVelocity = Vector3.new(0, math.rad(720), 0)
+	spin.AngularVelocity = Vector3.new(0, math.rad(6000), 0)
 	spin.MaxTorque = Vector3.new(0, math.huge, 0)
 	spin.P = 10000
 	spin.Parent = root
@@ -204,3 +100,24 @@ local function startRocketSequence()
 			}):Play()
 
 		elseif state == "fall" and elapsed >= 10 then
+			state = "reset"
+			conn:Disconnect()
+
+			spin:Destroy()
+			follow:Destroy()
+			uprightGyro:Destroy()
+			platform:Destroy()
+
+			humanoid.PlatformStand = false
+			humanoid.AutoRotate = true
+
+			isLaunching = false
+			launchButton.Text = "LAUNCH"
+			launchButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+			launchButton.Active = true
+		end
+	end)
+end
+
+-- 🔘 Trigger dari tombol
+launchButton.MouseButton1Click:Connect(startRocketSequence)
