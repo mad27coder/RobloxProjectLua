@@ -1,425 +1,120 @@
--- Pengaturan awal
-getgenv().autoThank = false
-
--- Services
 local Players = game:GetService("Players")
-local TextChatService = game:GetService("TextChatService")
-local VirtualUser = game:GetService("VirtualUser")
-local RunService = game:GetService("RunService")
-local localPlayer = Players.LocalPlayer
-local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
+local player = Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
--- Anti-AFK
-Players.LocalPlayer.Idled:Connect(function()
-	VirtualUser:CaptureController()
-	VirtualUser:ClickButton1(Vector2.new(0, 0))
-end)
+local screenGui = Instance.new("ScreenGui", game.CoreGui)
+screenGui.Name = "Joystick"
 
--- GUI Setup
-local ScreenGui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
-ScreenGui.Name = "AutoGUI"
-ScreenGui.ResetOnSpawn = false
+local sizeOuter, sizeInner = 110, 50
+local radius = sizeOuter / 2
+local center, dragging, activeTouch
 
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 180, 0, 100)
-Frame.Position = UDim2.new(0.5, -90, 0.5, -50)
-Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Frame.BorderSizePixel = 0
-Frame.Active = true
-Frame.Draggable = true
+local outer = Instance.new("ImageLabel", screenGui)
+outer.Size = UDim2.fromOffset(sizeOuter, sizeOuter)
+outer.Position = UDim2.new(0.1, 0, 0.75, 0)
+outer.AnchorPoint = Vector2.new(0.5, 0.5)
+outer.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+outer.BackgroundTransparency = 0.3
+outer.BorderSizePixel = 0
+outer.ZIndex = 1
+outer.Active = true
+outer.Image = "rbxasset://textures/ui/TouchControlsSheet.png"
+outer.ImageRectSize = Vector2.new(220, 220)
+Instance.new("UICorner", outer).CornerRadius = UDim.new(1,0)
 
--- RGB Border Line
-local Border = Instance.new("Frame", Frame)
-Border.Size = UDim2.new(1, 4, 1, 4)
-Border.Position = UDim2.new(0, -2, 0, -2)
-Border.BackgroundTransparency = 1
-Border.BorderSizePixel = 2
-Border.BorderMode = Enum.BorderMode.Inset
-Border.ZIndex = 0
+local inner = Instance.new("ImageLabel", outer)
+inner.Size = UDim2.fromOffset(sizeInner, sizeInner)
+inner.Position = UDim2.new(0.5, -sizeInner/2, 0.5, -sizeInner/2)
+inner.BackgroundColor3 = Color3.fromRGB(150,150,150)
+inner.BorderSizePixel = 0
+inner.ZIndex = 2
+inner.Active = true
+inner.Image = "rbxasset://textures/ui/TouchControlsSheet.png"
+inner.ImageRectOffset = Vector2.new(220, 0)
+inner.ImageRectSize = Vector2.new(111, 111)
+Instance.new("UICorner", inner).CornerRadius = UDim.new(1,0)
 
--- RGB Animation
-task.spawn(function()
-	local hue = 0
-	while true do
-		hue = (hue + 1) % 360
-		local color = Color3.fromHSV(hue / 360, 1, 1)
-		Border.BorderColor3 = color
-		task.wait(0.05)
-	end
-end)
-
--- Toggle Button
-local toggleButton = Instance.new("TextButton", ScreenGui)
-toggleButton.Size = UDim2.new(0, 30, 0, 30)
-toggleButton.Position = UDim2.new(1, -35, 0.5, -15)
-toggleButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
-toggleButton.TextColor3 = Color3.new(1, 1, 1)
-toggleButton.Text = "≡"
-toggleButton.ZIndex = 10
-toggleButton.Active = true
-toggleButton.Draggable = true
-
-local guiVisible = true
-toggleButton.MouseButton1Click:Connect(function()
-	guiVisible = not guiVisible
-	Frame.Visible = guiVisible
-end)
-
--- GUI Elements
-local ThankButton = Instance.new("TextButton", Frame)
-ThankButton.Size = UDim2.new(1, -20, 0, 30)
-ThankButton.Position = UDim2.new(0, 10, 0, 10)
-ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-ThankButton.TextColor3 = Color3.new(1, 1, 1)
-ThankButton.Font = Enum.Font.SourceSansBold
-ThankButton.TextSize = 16
-
-local StatusLabel = Instance.new("TextLabel", Frame)
-StatusLabel.Size = UDim2.new(1, -20, 0, 20)
-StatusLabel.Position = UDim2.new(0, 10, 0, 45)
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.TextColor3 = Color3.new(1, 1, 1)
-StatusLabel.TextScaled = true
-StatusLabel.Font = Enum.Font.SourceSansBold
-
-local SignatureLabel = Instance.new("TextLabel", Frame)
-SignatureLabel.Size = UDim2.new(1, -20, 0, 20)
-SignatureLabel.Position = UDim2.new(0, 10, 1, -25)
-SignatureLabel.BackgroundTransparency = 1
-SignatureLabel.TextColor3 = Color3.new(1, 1, 1)
-SignatureLabel.Text = "LYNX x DHINZ"
-SignatureLabel.Font = Enum.Font.SourceSansBold
-SignatureLabel.TextScaled = true
-
--- Update GUI
-local function updateGUI()
-	ThankButton.Text = "Auto Jokes: " .. (getgenv().autoThank and "ON" or "OFF")
-	StatusLabel.Text = "Status: " .. (getgenv().autoThank and "Aktif" or "Nonaktif")
-end
-
-updateGUI()
-
--- Thank Messages
-local thankMessages = {
-    "I asked my dog about life, but he just stared at me and wagged his tail.",
-    "Parallel lines are like best friends, always close but they never actually meet anywhere.",
-    "I tried eating a clock once, but it was just way too time consuming for me.",
-    "If laziness was an Olympic sport, I’d probably send someone else to accept my medal.",
-    "Whenever I wash my car, it instantly rains. I think the clouds are just trolling me.",
-    "The elevator to success is broken, so I’m taking the stairs one meme at a time.",
-    "I made a salad for dinner, but the croutons and dressing outnumbered the vegetables completely.",
-    "If Monday had a face, I’d block it and report it for being annoying every week.",
-    "My alarm clock and I have a complicated relationship. Sometimes we both just ignore each other.",
-    "Every time I jog, my mind wonders if pizza is waiting at the finish line for me.",
-    "I told my plant I love it daily, now the cactus hugs me with its sharp little spikes.",
-    "I finally cleaned my room and found three pens, two socks, and my childhood dreams hiding there.",
-    "If I had a dollar for every bad joke, I’d be able to buy funnier ones for sure.",
-    "My neighbor’s Wi-Fi is called 'It Hurts When IP.' It makes me giggle every single morning.",
-    "I told my dog my secrets, now he just looks at me with even more judgment than before.",
-    "Whenever I say 'I’ll be there in five minutes,' just remember my minutes are measured in dog years.",
-    "If I could have a superpower, I’d choose to always find matching socks in the laundry basket.",
-    "I bought a book called 'How to Solve 50% of Your Problems.' Now I have two books instead.",
-    "I asked my cat for homework help, but she just walked over the keyboard and took a nap.",
-    "If procrastination was an art form, I’d already have my masterpiece finished tomorrow or maybe next week.",
-    "I tried to write a joke about construction, but I’m still working on the punchline every day.",
-    "If my phone falls, I panic, but if I trip myself, I just act like nothing happened.",
-    "My computer keeps freezing, but maybe it just needs a warm hug or a cup of tea.",
-    "If you think swimming with dolphins is expensive, try swimming with sharks—it cost me an arm and a leg.",
-    "I told my friend a joke about time travel, but he said he didn’t like it yesterday.",
-    "Every time I wash dishes, one spoon magically appears after I’m done. It’s a kitchen conspiracy for sure.",
-    "If being late was a crime, my alarm clock would be my number one accomplice every single morning.",
-    "If I had a dollar for every time I got distracted, I’d definitely buy something shiny and forget it.",
-    "I asked my reflection for advice, but all it did was make funny faces back at me.",
-    "I tried to catch some fog this morning, but I mist every single chance I had.",
-    "If my bed had a 'like' button, I’d press it a million times every day without question.",
-    "I danced in my room today, but my mirror filed a complaint with the furniture association.",
-    "My favorite exercise is a cross between a lunge and a crunch. I call it lunch, obviously.",
-    "If Mondays had a personality, I’d unfriend them and block all their calls without hesitation.",
-    "I wish I could lose weight as easily as I lose my Wi-Fi signal every evening at home.",
-    "The only marathon I’m trained for is watching four seasons of a show in one single night.",
-    "If I could teleport, I’d still probably arrive late and blame traffic on the quantum highway.",
-    "I asked my pillow for advice, but all it gave me was another night of weird dreams.",
-    "If at first you don’t succeed, skydiving is definitely not the hobby for you to try.",
-    "I wrote a song about tortillas, but honestly, it’s more of a wrap than a ballad.",
-    "Why do fish never play chess? Because they always end up eating all the pieces anyway.",
-    "I tried to eat healthy salad, but the cookies kept calling my name from the kitchen.",
-    "My socks went missing, and now my shoes are feeling really lonely at the entrance.",
-    "If we shouldn’t eat at night, why is there a light in the fridge anyway?",
-    "I told my dog what's two minus two. He just stared at me in silence, pure genius.",
-    "If my phone had feelings, it would be tired of all my endless scrolling every single day.",
-    "Whenever I’m bored, I pretend to be a carrot and just lie absolutely still on the couch.",
-    "If you think nobody cares if you’re alive, try missing a couple of car payments.",
-    "The internet went down, so I had to socialize with my family. They seem like nice people.",
-    "I bought a map of the world, but I still get lost going to my own kitchen.",
-    "My bed and I are perfect for each other, but my alarm clock keeps trying to break us up.",
-    "I ordered a pizza, but it never came with enough cheese to match my expectations.",
-    "If I ever write a book about failure, it’ll probably never get published or even finished.",
-    "Not to brag, but I already forgot what I was supposed to be bragging about right now.",
-    "Sometimes I talk to myself, and we both end up laughing at the same silly joke.",
-    "I spilled spot remover on my dog. Now he's completely gone and nowhere to be found.",
-    "Why did the traffic light turn red? Because it saw the car changing its lanes.",
-    "If Mondays had a face, I would punch it every single time without any guilt.",
-    "If you can’t convince them, just confuse them and walk away like nothing happened.",
-    "I tried to be normal once. Worst two minutes of my entire life, never again.",
-    "If I had a dollar for every bad pun, I’d be rich and unbearable at parties.",
-    "I asked my math teacher for help, but all she gave me was more problems to solve.",
-    "If laughter is the best medicine, my jokes are basically a full-on health plan.",
-    "I made a snowman yesterday, but when I woke up, he had already moved out.",
-    "If I could time travel, I’d probably still forget why I went back in time.",
-    "If life gives you lemons, just sell them and buy chocolate instead.",
-    "My favorite childhood memory is not paying bills and eating snacks all day.",
-    "If you think nobody cares, try missing a couple of dentist appointments in a row.",
-    "I tried organizing a hide and seek contest, but good players are really hard to find.",
-    "If you’re not supposed to eat midnight snacks, why is there even a light in the fridge?",
-    "If being awkward was a skill, I’d probably already have a black belt by now.",
-    "I wanted to be productive, but my bed had way better plans for the day.",
-    "If I had a superpower, I’d want to mute people in real life with a remote.",
-    "I tried to count my blessings, but all I got was a cramp in my brain.",
-    "If you think swimming with dolphins is expensive, try swimming with sharks—cost me an arm and a leg.",
-    "My phone battery lasts longer than my New Year’s resolutions every single year.",
-    "If at first you don’t succeed, just redefine success and keep going like nothing happened.",
-    "I told my friend I was invisible. He said, 'I can’t see you doing that.'",
-    "If my wallet had feelings, it would cry every time I walk into a store.",
-    "If you ever feel useless, just remember there are keys on a keyboard nobody ever uses.",
-    "I asked my goldfish for advice, but it just kept swimming in circles all day.",
-    "If multitasking was a sport, I’d forget what I was doing halfway through the competition.",
-    "If I ever run for president, my campaign slogan would be 'Free Wi-Fi for Everyone.'",
-    "If my life had a soundtrack, there would be a lot of awkward silence and laughter.",
-    "I tried to join a procrastinators club, but they keep postponing the first meeting.",
-    "If you want to look busy, just open an Excel sheet and nod seriously.",
-    "If awkward silences burned calories, I’d be in amazing shape by now.",
-    "I tried to be normal, but my weird side won the argument without a fight.",
-    "If I had a dollar for every time I lost my keys, I’d buy a key finder.",
-    "If you ever feel cold, stand in the corner. It’s usually ninety degrees there.",
-    "I asked my pillow for advice, but it just gave me more weird dreams to ponder.",
-    "If I could have dinner with anyone, I’d choose pizza every single time.",
-    "If laziness was a language, I’d be completely fluent and probably write a book about it.",
-    "If my memory was any worse, I’d have to write reminders to remember my reminders.",
-    "If I ever get kidnapped, my captor will probably let me go because I talk too much.",
-    "If you can’t dazzle them with brilliance, baffle them with your best jokes instead.",
-    "If life is a journey, I’m definitely the tourist who forgot the map at home.",
-    "If you think I’m lazy now, you should see me in my dreams.",
-    "If I had a pause button for life, I’d use it every Monday morning.",
-    "If you want to keep a secret from me, just write it down somewhere safe.",
-    "If I had a superpower, it would definitely be finding the best snacks at any party.",
-    "If I could teleport anywhere, I’d still show up late and blame imaginary traffic.",
-    "If you think nobody cares about your problems, try posting them on social media.",
-    "If being awkward was an Olympic sport, I’d trip on the podium and laugh about it.",
-    "If I had a dollar for every time I hit snooze, I’d be awake and rich.",
-    "If sarcasm burned calories, I’d be invisible by now and feeling fantastic.",
-    "If my computer freezes, maybe it just needs a little blanket and some cocoa.",
-    "If my phone battery lasted as long as my boredom, I’d never need a charger.",
-    "If I could remember where I put things, my life would be a whole lot easier.",
-    "If I was a superhero, my power would be always forgetting why I walked into a room.",
-    "If my dog could text, I’d probably get messages asking for more snacks and belly rubs.",
-    "If I had a dollar for every app I never use, I’d buy another phone for fun.",
-    "If sleep was a job, I’d be the most dedicated employee the world has ever seen.",
-    "If I could eat anything without gaining weight, I’d live at the dessert table forever.",
-    "If I ever write a novel, it might just be a long list of my favorite snacks.",
-    "If my plants grew as fast as my to-do list, I’d have a jungle at home.",
-    "If you think I’m lost, just wait until I start giving directions to others.",
-    "If my brain had a restart button, I’d use it every Monday morning without hesitation.",
-    "If I ever get bored, I just count how many times I’ve opened the fridge today.",
-    "If being funny was a crime, I’d be serving a life sentence with no parole.",
-    "If you want to know the secret to happiness, buy a pizza and share it with friends.",
-    "If I could turn back time, I’d probably still press snooze one more time.",
-    "If my friends ever plan a surprise party, they better bring snacks as an apology.",
-    "If I had a dollar for every selfie, I'd have a photo album full of dollars.",
-    "If my shoes could talk, they’d ask for a vacation once in a while.",
-    "If laughter is contagious, I’m definitely patient zero at every family gathering.",
-    "If I had a dollar for every awkward moment, I’d already own the world.",
-    "If I could nap anywhere, I’d pick the couch in every furniture store.",
-    "If my brain was a browser, I’d have too many tabs open all the time.",
-    "If I ever win the lottery, I’d probably forget where I put the winning ticket.",
-    "If I could clone myself, we’d still both be late to every event.",
-    "If my life was a movie, it would be a comedy with lots of deleted scenes.",
-    "If I had a GPS for my thoughts, it would always say 'recalculating.'",
-    "If my socks always matched, I’d feel like I’m living someone else’s life.",
-    "If coffee could solve problems, I’d be the happiest person at every morning meeting.",
-    "If I was any more chill, I’d be mistaken for a refrigerator.",
-    "If my brain had an undo button, I’d use it after every embarrassing moment.",
-    "If I could laugh at myself for a living, I’d be a billionaire.",
-    "If my phone had feelings, it would block me after all my late-night scrolling.",
-    "If I had a dollar for every time I said 'just five more minutes,' I’d be rich and late.",
-    "If my plants could talk, they’d probably ask for less water and more compliments.",
-    "If I could teleport, I’d pop into the kitchen every time I get hungry.",
-    "If my alarm clock had feelings, it would be so tired of my snooze button abuse.",
-    "If I had a pause button, I’d use it every time someone says 'let’s exercise.'",
-    "If my shoes fit perfectly, I’d still trip over nothing just for fun.",
-    "If I was any more forgetful, I’d need a reminder to remember my reminders.",
-    "If I had a dollar for every joke I've told, I’d buy a better sense of humor.",
-    "If my Wi-Fi signal was as strong as my hunger, I’d always have full bars.",
-    "If I could eat dessert first every meal, I’d declare it a national law.",
-    "If my fridge could talk, it would just sigh every time I open it for no reason.",
-    "If my phone could talk, it would ask for a vacation from all the notifications.",
-    "If being awkward was fashionable, I’d be on the cover of every magazine.",
-    "If I could time travel, I’d go back and remind myself not to procrastinate.",
-    "If I had a dollar for every time I laughed at my own joke, I’d be my own biggest fan.",
-    "If my dreams came true, I’d probably sleep in and miss all the excitement.",
-    "If I had a dollar for every password I’ve forgotten, I’d finally buy a password manager.",
-    "If my umbrella could talk, it would complain about all the bad weather choices I've made.",
-    "If I could rename Monday, I’d call it 'Pre-Tuesday' and hope it feels less grumpy.",
-    "If my sneakers were alive, they’d beg for a day off from all the walking.",
-    "If my coffee mug disappeared, I’d officially declare a national emergency in my kitchen.",
-    "If I could freeze time, I’d use it to catch up on all my missed naps.",
-    "If my mirror gave compliments, I’d probably look into it way more often.",
-    "If I had a dollar for every time I lost my pen, I’d finally buy a pack of them.",
-    "If my fridge had a voice, it would tell me to stop checking for snacks every ten minutes.",
-    "If I had a dollar for every time I forgot my password, I’d be able to retire early.",
-    "If my bed was a country, I’d be the proud president of Pillowland.",
-    "If I could have any job, I’d want to be a professional nap reviewer.",
-    "If my TV remote had feelings, it would hide from me after every Netflix marathon.",
-    "If my phone screen cracked every time I dropped it, I’d have a modern art masterpiece.",
-    "If I could invent anything, it would be a blanket that makes you never want to leave bed.",
-    "If my plants could sing, they’d probably perform a song about sunlight and water shortages.",
-    "If I had a dollar for every time I checked the fridge, I’d buy a better lock.",
-    "If my socks could talk, they’d tell epic tales of the washing machine adventures.",
-    "If my computer had a sense of humor, it would laugh every time I forget to save.",
-    "If my pillow could remember dreams, it would have the weirdest bedtime stories.",
-    "If my shoes could count steps, they’d brag about every lazy Sunday at home.",
-    "If I was a vegetable, I’d be a couch potato with extra butter.",
-    "If I could have any pet, I’d pick a dragon, just for the dramatic entrances.",
-    "If my coffee cup was bottomless, I’d never leave the house without it.",
-    "If I had a dollar for every time I said 'I’m hungry,' I’d own a bakery.",
-    "If my bed could text, it would constantly send 'where are you?' messages.",
-    "If I could swap places with anyone, I’d choose my dog for the naps alone.",
-    "If my brain could talk, it would ask for more sleep and less stress.",
-    "If I had a dollar for every time I said 'oops,' I’d pay off my oops debt.",
-    "If my shoes had feelings, they’d be tired of all my aimless wandering.",
-    "If my fridge was a person, we’d have a complicated love-hate relationship.",
-    "If I could erase Mondays, I’d replace them with another Sunday for good measure.",
-    "If my favorite hobby was sleeping, I’d be a gold medalist every year.",
-    "If I had a dollar for every time I lost my socks, I’d open a sock shop.",
-    "If my alarm clock had a snooze limit, I’d be in serious trouble every morning.",
-    "If I could teleport to the kitchen, I’d never miss a snack break again.",
-    "If my pillow had a loyalty card, I’d be a platinum member by now.",
-    "If I had a dollar for every time I said 'just five more minutes,' I’d be rich and well-rested.",
-    "If my phone could talk, it would beg me to stop taking so many selfies.",
-    "If my bed was a magnet, I’d never want to leave it in the morning.",
-    "If my fridge had a security system, it would alert me every time I look for snacks.",
-    "If I could nap anywhere, I’d choose the sunniest spot in every room.",
-    "If my shoes could run by themselves, I’d let them do all the exercise.",
-    "If I had a dollar for every 'are we there yet?' as a kid, I’d buy a spaceship.",
-    "If my calendar had feelings, it would cry every time I cancel plans.",
-    "If my brain had a volume knob, I’d turn down the overthinking and turn up the jokes.",
-    "If I could change one thing about my day, I’d add more snack breaks.",
-    "If my fridge could record my visits, it would have a daily food diary.",
-    "If my shoes had GPS, they’d still get lost in the closet.",
-    "If I had a dollar every time I forgot why I walked into a room, I’d have a mansion.",
-    "If my pillow could rate my dreams, I’d expect five stars for the nap ones.",
-    "If I could erase all my embarrassing moments, I’d probably forget half my stories.",
-    "If my coffee could talk, it would say 'please drink me before you answer emails.'",
-    "If I had a dollar for every silly joke, I’d buy tickets to a comedy show.",
-    "If my shoes could pick where to go, we’d visit every bakery in town.",
-    "If my calculator had feelings, it would sigh every time I hit the wrong buttons.",
-    "If my breakfast could talk, it would ask for more coffee and less morning rush.",
-    "If I had a dollar for every clumsy step, I’d buy bubble wrap for my life.",
-    "If my fridge could vote, it would ban midnight snacks forever.",
-    "If my TV could talk, it would ask me to try a new show once in a while.",
-    "If my alarm clock could negotiate, I’d never be on time again.",
-    "If my shoes could talk, they’d write a tell-all about my dance moves.",
-    "If I had a dollar for every time I checked my phone, I’d buy a second charger.",
-    "If my favorite song played every time I entered a room, I’d feel like a superstar.",
-    "If my fridge had an applause button, it would cheer every time I choose a vegetable.",
-    "If my pillow could talk, it would remind me to go to bed earlier.",
-    "If I could order happiness online, I’d pick extra joy with instant delivery.",
-    "If my calendar could talk, it would beg for a vacation from all the reminders.",
-    "If I had a dollar for every time I smiled, I’d open a happiness bank.",
-    "If my blanket had arms, it would hug me and never let go.",
-    "If my shoes had a favorite season, it would definitely be slipper season.",
-    "If my fridge could text me, it would say 'stop looking, nothing new inside.'",
-    "If I had a dollar for every time I lost my train of thought, I’d be an engineer.",
-    "If my TV could reward me for binge-watching, I’d be a champion by now.",
-    "If my favorite snack had a fan club, I’d be president and the only member.",
-    "If I could bottle laughter, I’d sell it as the world’s best medicine.",
-    "If my alarm clock could talk, it would say 'nice try' every time I hit snooze.",
-    "If my shoes could tell stories, they’d have a whole novel about my adventures.",
-    "If my pillow could sing lullabies, I’d fall asleep before the first chorus.",
-    "If I had a dollar for every funny thought, I’d be a joke millionaire.",
-    "If my fridge could give advice, it would say 'maybe try water this time.'",
-    "If my calendar could make plans, it would schedule more naps and fewer meetings.",
-    "If my brain had a playlist, it would be mostly catchy jingles and random ideas.",
-    "If my shoes could dance, they’d do the cha-cha every time I hear music.",
-    "If my pillow could teleport, it would follow me everywhere I go.",
-    "If my fridge could talk, it would say 'you again?' every time I open the door.",
-    "If my favorite food had an award ceremony, pizza would win every single category.",
-    "If my shoes could choose, they’d pick the softest carpet every time.",
-    "If my alarm clock had a secret, it would be setting itself five minutes ahead.",
-    "If I had a dollar for every daydream, I’d be the richest dreamer alive.",
-    "If my pillow had a personality, it would be the best listener I ever had.",
-    "If my fridge had a wish, it would want fewer midnight visitors.",
-    "If my shoes could write a diary, it would be all about wild walks and lazy days.",
-    "If my brain could save drafts, I’d never lose another great idea again.",
-    "If my blanket could talk, it would say 'just five more minutes' every morning.",
-    "If my favorite mug could travel, it would visit every coffee shop in the city.",
-    "If my snacks could hide, they’d go straight to the back of the cupboard.",
-    "If my shoes could pick the weather, it would always be sunny and dry.",
-    "If my pillow could text my boss, it would request a nap break for me.",
-    "If my phone could give pep talks, it would say 'you’ve got this' every morning.",
-    "If my fridge could lock itself, it would save me from late night snacks.",
-    "If my shoes could choose a superpower, it would be flying above all puddles.",
-    "If my alarm clock could grant wishes, I’d wish for every day to start at noon.",
-    "If my pillow could read my mind, it would tell me to dream bigger tonight.",
-    "If my fridge had a wishlist, it would want more leftovers and fewer empty shelves.",
-    "If my shoes could sing, they’d perform a toe-tapping number every time I walk.",
-    "If my calendar could laugh, it would crack up at my ever-changing plans.",
-    "If my pillow could write poems, it would rhyme about dreams and quiet nights.",
-    "If my fridge could throw parties, it would invite all the snacks for midnight feasts.",
-    "If my shoes could give advice, they’d say 'never skip a comfy pair.'",
-    "If my alarm clock could apologize, it would say 'I’m sorry for all the mornings.'",
-    "If my pillow could tell stories, it would have the fluffiest tales ever told.",
-    "If my fridge could keep secrets, it would never mention my third slice of cake.",
-    "If my shoes could vote, they’d pick the shortest route every day.",
-    "If my calendar could sing, it would belt out 'holiday' every Friday afternoon.",
-    "If my pillow could win awards, it would get best supporting role in every nap.",
-    "If my fridge could set rules, it would only allow healthy snacks after midnight.",
-    "If my shoes could pick a hobby, it’d be cloud watching in the park.",
-    "If my alarm clock had a best friend, it would be the snooze button forever.",
-    "If my pillow could join a band, it would play soft rock every night.",
-    "If my fridge had a motto, it would be 'stay cool and carry snacks.'",
-    "If my shoes could talk, they’d remind me to take more relaxing walks.",
-    "If my calendar could dance, it would tango for every weekend plan.",
-    "If my pillow could plan vacations, it would choose the softest hotel beds.",
-    "If my fridge could give awards, it would honor the oldest leftovers every week.",
-    "If my shoes could write jokes, they’d be all about stepping out in style.",
-    "If my alarm clock could tell jokes, it would make waking up almost bearable.",
-    "If my pillow could throw parties, it would invite all the blankets for a sleepover.",
-    "If my fridge could paint, it would create masterpieces out of colorful leftovers.",
-    "If my shoes could host a show, it would be a travel series for feet only.",
-    "If my calendar could write stories, it would be a comedy about missed appointments.",
-    "If my pillow could give hugs, it would never let go until morning.",
-    "If my fridge could rap, it would drop the coolest beats on the block.",
-    "If my shoes could make wishes, it would wish for endless weekends.",
-    "If my alarm clock could sing, it would wake me up with a lullaby.",
-    "If my pillow could make puns, it would joke about soft landings all day.",
-    "If my fridge could tell fortunes, it would predict more snacks in my future.",
-    "If my shoes could throw a party, it would be a dance marathon for everyone.",
-    "If my calendar could recommend movies, it would pick comedies for every Monday.",
-    "If my pillow could start trends, it would make napping the new cool.",
-    "If my fridge could write letters, it would thank me for the fresh groceries.",
-    "If my shoes could make playlists, it would be all upbeat walking songs."
+_G.JoystickData = {
+    DraggingLevel = 0,
+    Direction = Vector3.new(0,0,0)
 }
 
--- Auto Thank Logic
-local leaderstats = localPlayer:WaitForChild("leaderstats")
-local raisedStat = leaderstats:WaitForChild("Raised")
-local lastRaised = raisedStat.Value
+local function toV2(pos)
+    return Vector2.new(pos.X, pos.Y)
+end
 
-raisedStat.Changed:Connect(function()
-	if getgenv().autoThank then
-		local newRaised = raisedStat.Value
-		if newRaised > lastRaised then
-			if chat then
-				local msg = thankMessages[math.random(1, #thankMessages)]
-				chat:SendAsync(msg)
-			end
-			lastRaised = newRaised
-		end
-	end
+local function updateCenter()
+    center = Vector2.new(
+        outer.AbsolutePosition.X + radius,
+        outer.AbsolutePosition.Y + radius
+    )
+end
+
+local function moveInner(posV2)
+    local dir = posV2 - center
+    local dist = math.min(dir.Magnitude, radius)
+    local offset = dir.Magnitude > 0 and dir.Unit * dist or Vector2.new(0,0)
+    inner.Position = UDim2.new(0.5, offset.X - sizeInner/2, 0.5, offset.Y - sizeInner/2)
+
+    -- Digital-style direction
+    local threshold = 0.3
+    local dirX = math.abs(offset.X / radius) > threshold and math.sign(offset.X) or 0
+    local dirZ = math.abs(offset.Y / radius) > threshold and math.sign(offset.Y) or 0
+    local dir3 = Vector3.new(dirX, 0, dirZ)
+    local dragLevel = (dirX ~= 0 or dirZ ~= 0) and 100 or 0
+
+    _G.JoystickData.DraggingLevel = dragLevel
+    _G.JoystickData.Direction = dir3
+end
+
+local function animatePress()
+    TweenService:Create(outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.fromOffset(sizeOuter * 1.1, sizeOuter * 1.1),
+        BackgroundColor3 = Color3.fromRGB(120,120,120)
+    }):Play()
+    TweenService:Create(inner, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.fromOffset(sizeInner * 1.2, sizeInner * 1.2),
+        BackgroundColor3 = Color3.fromRGB(200,200,200)
+    }):Play()
+end
+
+local function animateRelease()
+    TweenService:Create(outer, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.fromOffset(sizeOuter, sizeOuter),
+        BackgroundColor3 = Color3.fromRGB(80,80,80)
+    }):Play()
+    TweenService:Create(inner, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.fromOffset(sizeInner, sizeInner),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    }):Play()
+end
+
+for _, obj in ipairs({outer, inner}) do
+    obj.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch and not dragging then
+            updateCenter()
+            dragging = true
+            activeTouch = input
+            moveInner(toV2(input.Position))
+            animatePress()
+        end
+    end)
+end
+
+UIS.TouchMoved:Connect(function(input)
+    if dragging and activeTouch and input == activeTouch then
+        moveInner(toV2(input.Position))
+    end
 end)
 
--- Button Logic
-ThankButton.MouseButton1Click:Connect(function()
-	getgenv().autoThank = not getgenv().autoThank
-	updateGUI()
+UIS.TouchEnded:Connect(function(input)
+    if dragging and activeTouch and input == activeTouch then
+        dragging = false
+        activeTouch = nil
+        inner.Position = UDim2.new(0.5, -sizeInner/2, 0.5, -sizeInner/2)
+        _G.JoystickData.DraggingLevel = 0
+        _G.JoystickData.Direction = Vector3.new(0,0,0)
+        animateRelease()
+    end
 end)
