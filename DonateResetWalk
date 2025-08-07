@@ -1,11 +1,12 @@
 -- Pengaturan awal
 getgenv().autoThank = false
+getgenv().promoSpam = false
+getgenv().autoWalk = false
 
 -- Services
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local VirtualUser = game:GetService("VirtualUser")
-local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
 local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
 
@@ -21,37 +22,15 @@ ScreenGui.Name = "AutoGUI"
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 180, 0, 100)
-Frame.Position = UDim2.new(0.5, -90, 0.5, -50)
-Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Frame.BorderSizePixel = 0
+Frame.Size = UDim2.new(0, 220, 0, 200)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -100)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.Active = true
 Frame.Draggable = true
 
--- RGB Border Line
-local Border = Instance.new("Frame", Frame)
-Border.Size = UDim2.new(1, 4, 1, 4)
-Border.Position = UDim2.new(0, -2, 0, -2)
-Border.BackgroundTransparency = 1
-Border.BorderSizePixel = 2
-Border.BorderMode = Enum.BorderMode.Inset
-Border.ZIndex = 0
-
--- RGB Animation
-task.spawn(function()
-	local hue = 0
-	while true do
-		hue = (hue + 1) % 360
-		local color = Color3.fromHSV(hue / 360, 1, 1)
-		Border.BorderColor3 = color
-		task.wait(0.05)
-	end
-end)
-
--- Toggle Button
 local toggleButton = Instance.new("TextButton", ScreenGui)
-toggleButton.Size = UDim2.new(0, 30, 0, 30)
-toggleButton.Position = UDim2.new(1, -35, 0.5, -15)
+toggleButton.Size = UDim2.new(0, 40, 0, 40)
+toggleButton.Position = UDim2.new(1, -45, 0.5, -20)
 toggleButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
 toggleButton.TextColor3 = Color3.new(1, 1, 1)
 toggleButton.Text = "≡"
@@ -67,23 +46,32 @@ end)
 
 -- GUI Elements
 local ThankButton = Instance.new("TextButton", Frame)
-ThankButton.Size = UDim2.new(1, -20, 0, 30)
+ThankButton.Size = UDim2.new(0, 200, 0, 40)
 ThankButton.Position = UDim2.new(0, 10, 0, 10)
 ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 ThankButton.TextColor3 = Color3.new(1, 1, 1)
-ThankButton.Font = Enum.Font.SourceSansBold
-ThankButton.TextSize = 16
+
+local PromoButton = Instance.new("TextButton", Frame)
+PromoButton.Size = UDim2.new(0, 200, 0, 40)
+PromoButton.Position = UDim2.new(0, 10, 0, 60)
+PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+PromoButton.TextColor3 = Color3.new(1, 1, 1)
+
+local WalkButton = Instance.new("TextButton", Frame)
+WalkButton.Size = UDim2.new(0, 200, 0, 40)
+WalkButton.Position = UDim2.new(0, 10, 0, 110)
+WalkButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+WalkButton.TextColor3 = Color3.new(1, 1, 1)
 
 local StatusLabel = Instance.new("TextLabel", Frame)
-StatusLabel.Size = UDim2.new(1, -20, 0, 20)
-StatusLabel.Position = UDim2.new(0, 10, 0, 45)
+StatusLabel.Size = UDim2.new(0, 200, 0, 20)
+StatusLabel.Position = UDim2.new(0, 10, 0, 155)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.TextColor3 = Color3.new(1, 1, 1)
 StatusLabel.TextScaled = true
-StatusLabel.Font = Enum.Font.SourceSansBold
 
 local SignatureLabel = Instance.new("TextLabel", Frame)
-SignatureLabel.Size = UDim2.new(1, -20, 0, 20)
+SignatureLabel.Size = UDim2.new(0, 200, 0, 20)
 SignatureLabel.Position = UDim2.new(0, 10, 1, -25)
 SignatureLabel.BackgroundTransparency = 1
 SignatureLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -91,143 +79,16 @@ SignatureLabel.Text = "LYNX x DHINZ"
 SignatureLabel.Font = Enum.Font.SourceSansBold
 SignatureLabel.TextScaled = true
 
--- Update GUI
 local function updateGUI()
-	ThankButton.Text = "Auto Thank: " .. (getgenv().autoThank and "ON" or "OFF")
-	StatusLabel.Text = "Status: " .. (getgenv().autoThank and "Aktif" or "Nonaktif")
+	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
+	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
+	WalkButton.Text = "Toggle Auto Walk (" .. (getgenv().autoWalk and "ON" or "OFF") .. ")"
+	StatusLabel.Text = "Status: Thank " .. (getgenv().autoThank and "ON" or "OFF") ..
+		" / Promo " .. (getgenv().promoSpam and "ON" or "OFF") ..
+		" / Walk " .. (getgenv().autoWalk and "ON" or "OFF")
 end
 
 updateGUI()
-
--- Thank Messages
-local thankMessages = {
-    "You just made my booth 200% cooler 😁",
-    "Robux received, happiness unlocked 😊",
-    "Your kindness just leveled me up 😘",
-    "Donation detected, smile activated 😂",
-    "You're the real MVP today 😎",
-    "Thanks! I’ll name a booth pixel after you 😁",
-    "Robux entered, stress exited 😊",
-    "You made this booth worth visiting 😌",
-    "Now I believe in miracles again 😭😂",
-    "You donated, I did a happy dance 😆",
-    "Appreciate you more than words 😘",
-    "My booth just blushed, thanks to you 😊",
-    "You're the reason this booth shines 😁",
-    "Donation? More like motivation 😍",
-    "You're awesome and now slightly poorer 😂",
-    "This booth owes you everything 😊",
-    "Thanks! I’ll never financially recover… in a good way 😁",
-    "You dropped Robux, I dropped my jaw 😳",
-    "Your Robux has healing powers 😂",
-    "You made my day 100x better 😊",
-    "That donation hit harder than coffee 😆",
-    "You're pure good vibes 😎",
-    "My booth just sent you a virtual hug 🤗",
-    "Robux from you = serotonin unlocked 😊",
-    "You're the hero this booth needed 😁",
-    "Your donation restored my faith in boothkind 😇",
-    "Who needs therapy when you donate like this? 😂",
-    "Thank you for upgrading my day 😘",
-    "Donation from a legend detected 😎",
-    "Your Robux has been turned into good karma 😊",
-    "The booth is smiling because of you 😁",
-    "You're the reason my sign is glowing 😍",
-    "Thanks! You just bought me joy 😂",
-    "Every Robux from you is a high-five to my soul 😊",
-    "You just made donating look cool 😎",
-    "This booth owes its soul to you 😂",
-    "Thanks for the pixel power-up 😁",
-    "You didn’t have to, but I’m glad you did 😊",
-    "That donation made the booth giggle 😆",
-    "You dropped Robux like a boss 😎",
-    "Happiness: sponsored by your donation 😊",
-    "Your support = instant energy boost 😁",
-    "Thanks for fueling the good vibes 😊",
-    "Legend spotted dropping Robux 😍",
-    "My booth feels blessed today 😇",
-    "Donation? More like an instant smile 😊",
-    "Your generosity is contagious 😄",
-    "Thanks for making this day brighter 😁",
-    "You’re officially the booth’s favorite now 😊",
-    "Can I pin your name here forever? 😂",
-    "The booth’s ego just grew. Thanks! 😎",
-    "Donation from a real one. Much love 😘",
-    "That Robux hit different 😆",
-    "You gave, I glowed 😊",
-    "Robux rain from a legend 😁",
-    "My booth’s self-esteem just spiked 😂",
-    "Your kindness didn’t go unnoticed 😊",
-    "Support like yours makes this fun 😍",
-    "You deserve all the good vibes 😘",
-    "You're a certified booth booster 😎",
-    "Donation received, mood upgraded 😊",
-    "Your kindness deserves a parade 😁",
-    "Robux well spent, smile well earned 😊",
-    "You just made digital history 😂",
-    "The booth’s heart grew 3 sizes today 😊",
-    "You’re a top-tier human 😇",
-    "That was more than Robux—it was magic 😊",
-    "Thanks for showing how it’s done 😎",
-    "You didn’t just donate—you inspired 😍",
-    "This booth glows differently now 😁",
-    "You left a sparkle in my chat 😊",
-    "Appreciation level: 999+ 😄",
-    "That donation was smoother than butter 😂",
-    "You just became my favorite stranger 😘",
-    "Legend dropped by, Robux in hand 😎",
-    "The booth is flexing because of you 😁",
-    "Thanks for not walking past 😊",
-    "You deserve a Robux refund (just kidding 😂)",
-    "Hype levels up because of your drop 😍",
-    "Donated with style—respect 😎",
-    "Thanks! You’re rare in the best way 😊",
-    "You’re now part of booth lore 😄",
-    "You're officially a booth co-owner 😂",
-    "Even the AFK guy smiled thanks to you 😊",
-    "The booth just high-fived itself 😂",
-    "Much love for the surprise drop 😘",
-    "Donation delivered with greatness 😎",
-    "That Robux added sparkle here 😁",
-    "Your kindness hits every time 😊",
-    "Thanks for the wholesome ambush 😂",
-    "Robux from you = good times unlocked 😄",
-    "You just gave me virtual coffee ☕😊",
-    "Booth got cooler, and it’s your fault 😎",
-    "Thanks for keeping the good vibes alive 😁",
-    "You're a 10/10 donator, confirmed 😍",
-    "You gave, I smiled, we both won 😊",
-    "The booth’s day just peaked 😂",
-    "Thank you for being extra awesome 😘",
-    "Your name is now written in booth gold 🏆😁",
-    "Smile status: permanently on 😊",
-    "You donated like it’s a superpower 😎",
-    "That’s the kind of support I dream of 😄",
-    "Your Robux just did a miracle 😂",
-    "Thanks for being good energy in here 😊", 
-}
--- Auto Thank Logic
-local leaderstats = localPlayer:WaitForChild("leaderstats")
-local raisedStat = leaderstats:WaitForChild("Raised")
-local lastRaised = raisedStat.Value
-
-raisedStat.Changed:Connect(function()
-	if getgenv().autoThank then
-		local newRaised = raisedStat.Value
-		if newRaised > lastRaised then
-			if chat then
-				local msg = thankMessages[math.random(1, #thankMessages)]
-				chat:SendAsync(msg)
-
-				-- Reset karakter setelah 5 detik
-				task.delay(5, function()
-					localPlayer:LoadCharacter()
-				end)
-			end
-			lastRaised = newRaised
-		end
-	end
-end)
 
 -- Button Logic
 ThankButton.MouseButton1Click:Connect(function()
@@ -235,7 +96,98 @@ ThankButton.MouseButton1Click:Connect(function()
 	updateGUI()
 end)
 
--- 🧠 Marker Kematian + Anti-Sit + Auto-Walk
+PromoButton.MouseButton1Click:Connect(function()
+	getgenv().promoSpam = not getgenv().promoSpam
+	updateGUI()
+end)
+
+WalkButton.MouseButton1Click:Connect(function()
+	getgenv().autoWalk = not getgenv().autoWalk
+	updateGUI()
+end)
+
+-- Messages
+local thankMessages = {
+	"Thank you so much! With that donation, my avatar can finally stop eating imaginary noodles. Ramen is great, but air ramen? Not so much.",
+}
+
+local promoMessages = {
+	"Support the cause! Every bit helps. 💖",
+	"Join the movement! Your donation makes a difference.",
+	"Thanks for being awesome! Keep the support coming!",
+}
+
+-- Promo Delay System
+local promoDelayUntil = 0
+local promoPauseOnDonation = 36
+
+local function getRandomPromoInterval()
+	return math.random(15, 20)
+end
+
+-- Shuffle function
+local function shuffle(array)
+	local shuffled = {}
+	local indices = {}
+	for i = 1, #array do table.insert(indices, i) end
+	for i = #indices, 2, -1 do
+		local j = math.random(i)
+		indices[i], indices[j] = indices[j], indices[i]
+	end
+	for _, i in ipairs(indices) do
+		table.insert(shuffled, array[i])
+	end
+	return shuffled
+end
+
+local shuffledPromo = shuffle(promoMessages)
+local shuffledIndex = 1
+
+-- Auto Promo Logic
+task.spawn(function()
+	while true do
+		if getgenv().promoSpam then
+			local currentTime = tick()
+			if currentTime >= promoDelayUntil then
+				if chat then
+					local msg = shuffledPromo[shuffledIndex]
+					chat:SendAsync(msg)
+					shuffledIndex += 1
+					if shuffledIndex > #shuffledPromo then
+						shuffledPromo = shuffle(promoMessages)
+						shuffledIndex = 1
+					end
+				end
+				promoDelayUntil = currentTime + getRandomPromoInterval()
+			end
+		end
+		task.wait(1)
+	end
+end)
+
+-- Auto Thank Logic + Promo Pause + Delayed Character Reset
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local raisedStat = leaderstats:WaitForChild("Raised")
+local lastRaised = raisedStat.Value
+
+raisedStat.Changed:Connect(function()
+	local newRaised = raisedStat.Value
+	if newRaised > lastRaised then
+		if getgenv().autoThank and chat then
+			local msg = thankMessages[math.random(1, #thankMessages)]
+			chat:SendAsync(msg)
+		end
+		lastRaised = newRaised
+		promoDelayUntil = tick() + promoPauseOnDonation
+		task.delay(15, function()
+			if localPlayer.Character then
+				localPlayer:LoadCharacter()
+			end
+		end)
+	end
+end)
+
+-- 🧠 Auto Walk to Death Marker Logic
 local marker = nil
 
 local function createDeathMarker(position)
@@ -251,21 +203,11 @@ local function createDeathMarker(position)
 	marker.Parent = workspace
 end
 
-local function destroySit(humanoid)
-	task.spawn(function()
-		while humanoid and humanoid.Parent do
-			humanoid.Sit = false
-			humanoid.SeatPart = nil
-			task.wait(0.1)
-		end
-	end)
-end
-
 local function walkToMarker(humanoid, root)
-	if not marker then return end
+	if not marker or not getgenv().autoWalk then return end
 
 	local reached = false
-	while not reached and humanoid and root do
+	while not reached and humanoid and root and getgenv().autoWalk do
 		humanoid:MoveTo(marker.Position)
 		local dist = (root.Position - marker.Position).Magnitude
 		if dist < 4 then
@@ -274,32 +216,14 @@ local function walkToMarker(humanoid, root)
 		task.wait(0.2)
 	end
 
-	marker:Destroy()
-	marker = nil
+	if marker then
+		marker:Destroy()
+		marker = nil
+	end
 end
 
 localPlayer.CharacterAdded:Connect(function(char)
 	local humanoid = char:WaitForChild("Humanoid")
 
-	-- Anti-sit
-	destroySit(humanoid)
-
-	-- Buat marker saat mati
 	humanoid.Died:Connect(function()
-		local root = char:FindFirstChild("HumanoidRootPart")
-		if root then
-			createDeathMarker(root.Position)
-		end
-	end)
-
-	-- Setelah respawn, jalan ke marker
-	task.spawn(function()
-		local root
-		repeat
-			root = char:FindFirstChild("HumanoidRootPart")
-			task.wait()
-		until root
-
-		walkToMarker(humanoid, root)
-	end)
-end)
+		local root = char:FindFirstChild("HumanoidRoot
