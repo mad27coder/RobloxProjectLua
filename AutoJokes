@@ -118,3 +118,117 @@ UIS.TouchEnded:Connect(function(input)
         animateRelease()
     end
 end)
+
+-- Joystick Setup
+local sizeOuter, sizeInner = 110, 50
+local radius = sizeOuter / 2
+local center, dragging, activeTouch
+
+local outer = Instance.new("ImageLabel", ScreenGui)
+outer.Size = UDim2.fromOffset(sizeOuter, sizeOuter)
+outer.Position = UDim2.new(0.1, 0, 0.75, 0)
+outer.AnchorPoint = Vector2.new(0.5, 0.5)
+outer.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+outer.BackgroundTransparency = 0.3
+outer.BorderSizePixel = 0
+outer.ZIndex = 5
+outer.Active = true
+outer.Image = "rbxasset://textures/ui/TouchControlsSheet.png"
+outer.ImageRectSize = Vector2.new(220, 220)
+Instance.new("UICorner", outer).CornerRadius = UDim.new(1,0)
+
+local inner = Instance.new("ImageLabel", outer)
+inner.Size = UDim2.fromOffset(sizeInner, sizeInner)
+inner.Position = UDim2.new(0.5, -sizeInner/2, 0.5, -sizeInner/2)
+inner.BackgroundColor3 = Color3.fromRGB(150,150,150)
+inner.BorderSizePixel = 0
+inner.ZIndex = 6
+inner.Active = true
+inner.Image = "rbxasset://textures/ui/TouchControlsSheet.png"
+inner.ImageRectOffset = Vector2.new(220, 0)
+inner.ImageRectSize = Vector2.new(111, 111)
+Instance.new("UICorner", inner).CornerRadius = UDim.new(1,0)
+
+_G.JoystickData = {
+    DraggingLevel = 0,
+    Direction = Vector3.new(0,0,0)
+}
+
+local function toV2(pos)
+    return Vector2.new(pos.X, pos.Y)
+end
+
+local function updateCenter()
+    center = Vector2.new(
+        outer.AbsolutePosition.X + radius,
+        outer.AbsolutePosition.Y + radius
+    )
+end
+
+local function moveInner(posV2)
+    local dir = posV2 - center
+    local dist = math.min(dir.Magnitude, radius)
+    local offset = dir.Magnitude > 0 and dir.Unit * dist or Vector2.new(0,0)
+    inner.Position = UDim2.new(0.5, offset.X - sizeInner/2, 0.5, offset.Y - sizeInner/2)
+
+    -- Digital-style direction
+    local threshold = 0.3
+    local dirX = math.abs(offset.X / radius) > threshold and math.sign(offset.X) or 0
+    local dirZ = math.abs(offset.Y / radius) > threshold and math.sign(offset.Y) or 0
+    local dir3 = Vector3.new(dirX, 0, dirZ)
+    local dragLevel = (dirX ~= 0 or dirZ ~= 0) and 100 or 0
+
+    _G.JoystickData.DraggingLevel = dragLevel
+    _G.JoystickData.Direction = dir3
+end
+
+local function animatePress()
+    TweenService:Create(outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.fromOffset(sizeOuter * 1.1, sizeOuter * 1.1),
+        BackgroundColor3 = Color3.fromRGB(120,120,120)
+    }):Play()
+    TweenService:Create(inner, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.fromOffset(sizeInner * 1.2, sizeInner * 1.2),
+        BackgroundColor3 = Color3.fromRGB(200,200,200)
+    }):Play()
+end
+
+local function animateRelease()
+    TweenService:Create(outer, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.fromOffset(sizeOuter, sizeOuter),
+        BackgroundColor3 = Color3.fromRGB(80,80,80)
+    }):Play()
+    TweenService:Create(inner, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.fromOffset(sizeInner, sizeInner),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    }):Play()
+end
+
+for _, obj in ipairs({outer, inner}) do
+    obj.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch and not dragging then
+            updateCenter()
+            dragging = true
+            activeTouch = input
+            moveInner(toV2(input.Position))
+            animatePress()
+        end
+    end)
+end
+
+UIS.TouchMoved:Connect(function(input)
+    if dragging and activeTouch and input == activeTouch then
+        moveInner(toV2(input.Position))
+    end
+end)
+
+UIS.TouchEnded:Connect(function(input)
+    if dragging and activeTouch and input == activeTouch then
+        dragging = false
+        activeTouch = nil
+        inner.Position = UDim2.new(0.5, -sizeInner/2, 0.5, -sizeInner/2)
+        _G.JoystickData.DraggingLevel = 0
+        _G.JoystickData.Direction = Vector3.new(0,0,0)
+        animateRelease()
+    end
+end)
