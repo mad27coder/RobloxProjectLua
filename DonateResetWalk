@@ -1,9 +1,9 @@
--- 🌐 Global Settings
+--  Global Settings
 getgenv().autoThank = false
 getgenv().promoSpam = false
 getgenv().autoFlyToDeath = true
 
--- 📦 Services
+--  Services
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local VirtualUser = game:GetService("VirtualUser")
@@ -11,20 +11,20 @@ local StarterGui = game:GetService("StarterGui")
 local player = Players.LocalPlayer
 local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
 
--- 💤 Anti-AFK
+--  Anti-AFK
 player.Idled:Connect(function()
 	VirtualUser:CaptureController()
 	VirtualUser:ClickButton1(Vector2.new(0, 0))
 end)
 
--- ✅ Notification
+--  Notification
 StarterGui:SetCore("SendNotification", {
 	Title = "✅ Script Executed",
 	Text = "Auto Thank, Promo, Death Marker & Fly enabled.",
 	Duration = 4
 })
 
--- 🖼 GUI Setup
+--  GUI Setup
 local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 ScreenGui.Name = "AutoGUI"
 ScreenGui.ResetOnSpawn = false
@@ -52,7 +52,7 @@ toggleButton.MouseButton1Click:Connect(function()
 	Frame.Visible = guiVisible
 end)
 
--- 🧩 GUI Elements
+--  GUI Elements
 local ThankButton = Instance.new("TextButton", Frame)
 ThankButton.Size = UDim2.new(0, 200, 0, 40)
 ThankButton.Position = UDim2.new(0, 10, 0, 10)
@@ -98,18 +98,18 @@ end
 
 updateGUI()
 
--- 💬 Messages
+--  Messages
 local thankMessages = {
 	"Thank you so much! With that donation, my avatar can finally stop eating imaginary noodles. Ramen is great, but air ramen? Not so much.",
 }
 
 local promoMessages = {
-	"Support the cause! Every bit helps. 💖",
+	"Support the cause! Every bit helps. ",
 	"Join the movement! Your donation makes a difference.",
 	"Thanks for being awesome! Keep the support coming!",
 }
 
--- ⏱ Promo Delay System
+--  Promo Delay System
 local promoDelayUntil = 0
 local promoPauseOnDonation = 36
 
@@ -117,7 +117,7 @@ local function getRandomPromoInterval()
 	return math.random(15, 20)
 end
 
--- 🔀 Shuffle
+--  Shuffle
 local function shuffle(array)
 	local shuffled, indices = {}, {}
 	for i = 1, #array do table.insert(indices, i) end
@@ -134,7 +134,7 @@ end
 local shuffledPromo = shuffle(promoMessages)
 local shuffledIndex = 1
 
--- 🚀 Auto Promo Logic
+--  Auto Promo Logic
 task.spawn(function()
 	while true do
 		if getgenv().promoSpam then
@@ -156,7 +156,7 @@ task.spawn(function()
 	end
 end)
 
--- 🙏 Auto Thank Logic + BreakJoints + Promo Pause
+--  Auto Thank Logic + BreakJoints + Promo Pause
 local leaderstats = player:WaitForChild("leaderstats")
 local raisedStat = leaderstats:WaitForChild("Raised")
 local lastRaised = raisedStat.Value
@@ -171,7 +171,7 @@ raisedStat.Changed:Connect(function()
 			end
 			lastRaised = newRaised
 
-			-- 💥 Break joints after 5 seconds
+			--  Break joints after 5 seconds
 			task.delay(5, function()
 				if player.Character then
 					player.Character:BreakJoints()
@@ -182,7 +182,7 @@ raisedStat.Changed:Connect(function()
 	promoDelayUntil = tick() + promoPauseOnDonation
 end)
 
--- 🧠 Button Logic
+--  Button Logic
 ThankButton.MouseButton1Click:Connect(function()
 	getgenv().autoThank = not getgenv().autoThank
 	updateGUI()
@@ -198,7 +198,7 @@ FlyToggle.MouseButton1Click:Connect(function()
 	updateGUI()
 end)
 
--- 🪦 Death Marker + Auto Fly
+--  Death Marker + Auto Fly
 local marker = nil
 
 local function createDeathMarker(position)
