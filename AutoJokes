@@ -1,16 +1,269 @@
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+-- ✅ ANTI-DUPLIKASI GUI & OBJEK
+local localPlayer = game:GetService("Players").LocalPlayer
 
-local screenGui = Instance.new("ScreenGui", game.CoreGui)
+-- Hapus GUI utama jika sudah ada
+local existingGui = localPlayer:FindFirstChild("PlayerGui"):FindFirstChild("AutoGUI")
+if existingGui then
+	existingGui:Destroy()
+end
+
+-- Hapus Joystick GUI jika sudah ada
+local existingJoystick = game:GetService("CoreGui"):FindFirstChild("Joystick")
+if existingJoystick then
+	existingJoystick:Destroy()
+end
+
+-- Hapus CameraPart jika sudah ada
+local oldCamPart = workspace:FindFirstChild("CameraPart")
+if oldCamPart then
+	oldCamPart:Destroy()
+end
+
+-- Hapus toggle BoolValue jika sudah ada
+local oldToggle = localPlayer:FindFirstChild("FreeMoveEnabled")
+if oldToggle then
+	oldToggle:Destroy()
+end
+
+-- ✅ SETUP GLOBAL
+getgenv().autoThank = false
+getgenv().promoSpam = false
+
+-- ✅ SERVICES
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+local VirtualUser = game:GetService("VirtualUser")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
+local camera = workspace.CurrentCamera
+
+-- ✅ ANTI-AFK
+Players.LocalPlayer.Idled:Connect(function()
+	VirtualUser:CaptureController()
+	VirtualUser:ClickButton1(Vector2.new(0, 0))
+end)
+
+-- ✅ GLOBAL DATA UNTUK JOYSTICK
+_G.JoystickData = {
+    DraggingLevel = 0,
+    Direction = Vector3.new(0,0,0)
+}
+
+-- ✅ GUI UTAMA
+local ScreenGui = Instance.new("ScreenGui", Players.LocalPlayer:WaitForChild("PlayerGui"))
+ScreenGui.Name = "AutoGUI"
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 220, 0, 200)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -100)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.Active = true
+Frame.Draggable = true
+
+-- ✅ TOGGLE GUI BUTTON
+local toggleButton = Instance.new("TextButton", ScreenGui)
+toggleButton.Size = UDim2.new(0, 40, 0, 40)
+toggleButton.Position = UDim2.new(1, -45, 0.5, -20)
+toggleButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Text = "≡"
+toggleButton.ZIndex = 10
+toggleButton.Active = true
+toggleButton.Draggable = true
+
+local guiVisible = true
+toggleButton.MouseButton1Click:Connect(function()
+	guiVisible = not guiVisible
+	Frame.Visible = guiVisible
+end)
+
+-- ✅ TOMBOL AUTO THANK
+local ThankButton = Instance.new("TextButton", Frame)
+ThankButton.Size = UDim2.new(0, 200, 0, 40)
+ThankButton.Position = UDim2.new(0, 10, 0, 10)
+ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ThankButton.TextColor3 = Color3.new(1, 1, 1)
+ThankButton.Font = Enum.Font.SourceSans
+ThankButton.TextScaled = true
+
+-- ✅ TOMBOL AUTO PROMO
+local PromoButton = Instance.new("TextButton", Frame)
+PromoButton.Size = UDim2.new(0, 200, 0, 40)
+PromoButton.Position = UDim2.new(0, 10, 0, 60)
+PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+PromoButton.TextColor3 = Color3.new(1, 1, 1)
+PromoButton.Font = Enum.Font.SourceSans
+PromoButton.TextScaled = true
+
+-- ✅ TOMBOL FREEMOVE
+local FreeMoveButton = Instance.new("TextButton", Frame)
+FreeMoveButton.Size = UDim2.new(0, 200, 0, 40)
+FreeMoveButton.Position = UDim2.new(0, 10, 0, 110)
+FreeMoveButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+FreeMoveButton.TextColor3 = Color3.new(1, 1, 1)
+FreeMoveButton.Font = Enum.Font.SourceSans
+FreeMoveButton.TextScaled = true
+
+-- ✅ LABEL STATUS
+local StatusLabel = Instance.new("TextLabel", Frame)
+StatusLabel.Size = UDim2.new(0, 200, 0, 20)
+StatusLabel.Position = UDim2.new(0, 10, 0, 155)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.TextColor3 = Color3.new(1, 1, 1)
+StatusLabel.TextScaled = true
+StatusLabel.Font = Enum.Font.SourceSans
+
+-- ✅ LABEL SIGNATURE
+local SignatureLabel = Instance.new("TextLabel", Frame)
+SignatureLabel.Size = UDim2.new(0, 200, 0, 20)
+SignatureLabel.Position = UDim2.new(0, 10, 1, -25)
+SignatureLabel.BackgroundTransparency = 1
+SignatureLabel.TextColor3 = Color3.new(1, 1, 1)
+SignatureLabel.Text = "LYNX x DHINZ"
+SignatureLabel.Font = Enum.Font.SourceSansBold
+SignatureLabel.TextScaled = true
+
+-- ✅ UPDATE GUI TEXT
+local function updateGUI()
+	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
+	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
+	FreeMoveButton.Text = "Toggle FreeMove (" .. (localPlayer:FindFirstChild("FreeMoveEnabled").Value and "ON" or "OFF") .. ")"
+	StatusLabel.Text = "Status: Thank " .. (getgenv().autoThank and "ON" or "OFF") ..
+		" / Promo " .. (getgenv().promoSpam and "ON" or "OFF") ..
+		" / FreeMove " .. (localPlayer:FindFirstChild("FreeMoveEnabled").Value and "ON" or "OFF")
+end
+
+updateGUI()
+
+-- ✅ LOGIKA TOMBOL AUTO THANK
+ThankButton.MouseButton1Click:Connect(function()
+	getgenv().autoThank = not getgenv().autoThank
+	updateGUI()
+end)
+
+-- ✅ LOGIKA TOMBOL AUTO PROMO
+PromoButton.MouseButton1Click:Connect(function()
+	getgenv().promoSpam = not getgenv().promoSpam
+	updateGUI()
+end)
+
+-- ✅ LOGIKA TOMBOL FREEMOVE
+local toggle = Instance.new("BoolValue")
+toggle.Name = "FreeMoveEnabled"
+toggle.Value = false
+toggle.Parent = localPlayer
+
+FreeMoveButton.MouseButton1Click:Connect(function()
+	toggle.Value = not toggle.Value
+	updateGUI()
+	if toggle.Value then
+		if _G.ShowJoystick then _G.ShowJoystick() end
+	else
+		if _G.HideJoystick then _G.HideJoystick() end
+	end
+end)
+
+-- ✅ UPDATE OTOMATIS SAAT NILAI TOGGLE BERUBAH
+toggle.Changed:Connect(updateGUI)
+
+-- ✅ PESAN-PESAN
+local thankMessages = {
+	"Thank you so much! With that donation, my avatar can finally stop eating imaginary noodles. Ramen is great, but air ramen? Not so much.",
+	"You're amazing! That donation just made my day brighter than my screen at max brightness.",
+	"Thanks a ton! Now I can finally afford virtual socks for my avatar's cold feet.",
+}
+
+local promoMessages = {
+	"Support the cause! Every bit helps. 💖",
+	"Join the movement! Your donation makes a difference.",
+	"Thanks for being awesome! Keep the support coming!",
+}
+
+-- ✅ SISTEM DELAY PROMO
+local promoDelayUntil = 0
+local promoPauseOnDonation = 36
+
+local function getRandomPromoInterval()
+	return math.random(15, 20)
+end
+
+-- ✅ SHUFFLE FUNCTION
+local function shuffle(array)
+	local shuffled = {}
+	local indices = {}
+	for i = 1, #array do table.insert(indices, i) end
+	for i = #indices, 2, -1 do
+		local j = math.random(i)
+		indices[i], indices[j] = indices[j], indices[i]
+	end
+	for _, i in ipairs(indices) do
+		table.insert(shuffled, array[i])
+	end
+	return shuffled
+end
+
+local shuffledPromo = shuffle(promoMessages)
+local shuffledIndex = 1
+
+-- ✅ AUTO PROMO LOOP
+task.spawn(function()
+	while true do
+		if getgenv().promoSpam then
+			local currentTime = tick()
+			if currentTime >= promoDelayUntil then
+				if chat then
+					local msg = shuffledPromo[shuffledIndex]
+					chat:SendAsync(msg)
+					shuffledIndex += 1
+					if shuffledIndex > #shuffledPromo then
+						shuffledPromo = shuffle(promoMessages)
+						shuffledIndex = 1
+					end
+				end
+				promoDelayUntil = currentTime + getRandomPromoInterval()
+			end
+		end
+		task.wait(1)
+	end
+end)
+
+-- ✅ AUTO THANK LOGIC
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local raisedStat = leaderstats:WaitForChild("Raised")
+local lastRaised = raisedStat.Value
+
+raisedStat.Changed:Connect(function()
+	if getgenv().autoThank then
+		local newRaised = raisedStat.Value
+		if newRaised > lastRaised then
+			if chat then
+				local msg = thankMessages[math.random(1, #thankMessages)]
+				chat:SendAsync(msg)
+			end
+			lastRaised = newRaised
+		end
+	end
+	-- Pause promo untuk 36 detik
+	promoDelayUntil = tick() + promoPauseOnDonation
+end)
+
+-- ✅ JOYSTICK GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.CoreGui
 screenGui.Name = "Joystick"
 
-local sizeOuter, sizeInner = 110, 50
+local sizeOuter = 110
+local sizeInner = 50
 local radius = sizeOuter / 2
-local center, dragging, activeTouch
+local center
+local dragging = false
+local activeTouch
 
-local outer = Instance.new("ImageLabel", screenGui)
+local outer = Instance.new("ImageLabel")
 outer.Size = UDim2.fromOffset(sizeOuter, sizeOuter)
 outer.Position = UDim2.new(0.1, 0, 0.75, 0)
 outer.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -21,313 +274,185 @@ outer.ZIndex = 1
 outer.Active = true
 outer.Image = "rbxasset://textures/ui/TouchControlsSheet.png"
 outer.ImageRectSize = Vector2.new(220, 220)
-Instance.new("UICorner", outer).CornerRadius = UDim.new(1,0)
+outer.Parent = screenGui
+Instance.new("UICorner", outer).CornerRadius = UDim.new(1, 0)
 
-local inner = Instance.new("ImageLabel", outer)
+local inner = Instance.new("ImageLabel")
 inner.Size = UDim2.fromOffset(sizeInner, sizeInner)
 inner.Position = UDim2.new(0.5, -sizeInner/2, 0.5, -sizeInner/2)
-inner.BackgroundColor3 = Color3.fromRGB(150,150,150)
+inner.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
 inner.BorderSizePixel = 0
 inner.ZIndex = 2
 inner.Active = true
 inner.Image = "rbxasset://textures/ui/TouchControlsSheet.png"
 inner.ImageRectOffset = Vector2.new(220, 0)
 inner.ImageRectSize = Vector2.new(111, 111)
-Instance.new("UICorner", inner).CornerRadius = UDim.new(1,0)
+inner.Parent = outer
+Instance.new("UICorner", inner).CornerRadius = UDim.new(1, 0)
 
-_G.JoystickData = {
-    DraggingLevel = 0,
-    Direction = Vector3.new(0,0,0)
-}
-
+-- ✅ FUNGSI JOYSTICK
 local function toV2(pos)
-    return Vector2.new(pos.X, pos.Y)
+	return Vector2.new(pos.X, pos.Y)
 end
 
 local function updateCenter()
-    center = Vector2.new(
-        outer.AbsolutePosition.X + radius,
-        outer.AbsolutePosition.Y + radius
-    )
+	center = Vector2.new(
+		outer.AbsolutePosition.X + radius,
+		outer.AbsolutePosition.Y + radius
+	)
 end
 
 local function moveInner(posV2)
-    local dir = posV2 - center
-    local dist = math.min(dir.Magnitude, radius)
-    local offset = dir.Magnitude > 0 and dir.Unit * dist or Vector2.new(0,0)
-    inner.Position = UDim2.new(0.5, offset.X - sizeInner/2, 0.5, offset.Y - sizeInner/2)
-
-    -- Digital-style direction
-    local threshold = 0.3
-    local dirX = math.abs(offset.X / radius) > threshold and math.sign(offset.X) or 0
-    local dirZ = math.abs(offset.Y / radius) > threshold and math.sign(offset.Y) or 0
-    local dir3 = Vector3.new(dirX, 0, dirZ)
-    local dragLevel = (dirX ~= 0 or dirZ ~= 0) and 100 or 0
-
-    _G.JoystickData.DraggingLevel = dragLevel
-    _G.JoystickData.Direction = dir3
+	local dir = posV2 - center
+	local dist = math.min(dir.Magnitude, radius)
+	local offset = dir.Magnitude > 0 and dir.Unit * dist or Vector2.new(0, 0)
+	inner.Position = UDim2.new(0.5, offset.X - sizeInner/2, 0.5, offset.Y - sizeInner/2)
+	local dragLevel = math.floor((dist / radius) * 100)
+	local dir3 = Vector3.new(offset.X / radius, 0, offset.Y / radius)
+	_G.JoystickData.DraggingLevel = dragLevel
+	_G.JoystickData.Direction = dir3
 end
 
+-- ✅ ANIMASI JOYSTICK
 local function animatePress()
-    TweenService:Create(outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.fromOffset(sizeOuter * 1.1, sizeOuter * 1.1),
-        BackgroundColor3 = Color3.fromRGB(120,120,120)
-    }):Play()
-    TweenService:Create(inner, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.fromOffset(sizeInner * 1.2, sizeInner * 1.2),
-        BackgroundColor3 = Color3.fromRGB(200,200,200)
-    }):Play()
+	TweenService:Create(outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(sizeOuter * 1.1, sizeOuter * 1.1),
+		BackgroundColor3 = Color3.fromRGB(120, 120, 120)
+	}):Play()
+	TweenService:Create(inner, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(sizeInner * 1.2, sizeInner * 1.2),
+		BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	}):Play()
 end
 
 local function animateRelease()
-    TweenService:Create(outer, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.fromOffset(sizeOuter, sizeOuter),
-        BackgroundColor3 = Color3.fromRGB(80,80,80)
-    }):Play()
-    TweenService:Create(inner, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.fromOffset(sizeInner, sizeInner),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    }):Play()
+	TweenService:Create(outer, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(sizeOuter, sizeOuter),
+		BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+	}):Play()
+	TweenService:Create(inner, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(sizeInner, sizeInner),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	}):Play()
 end
 
+-- ✅ INPUT DETECTION
 for _, obj in ipairs({outer, inner}) do
-    obj.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch and not dragging then
-            updateCenter()
-            dragging = true
-            activeTouch = input
-            moveInner(toV2(input.Position))
-            animatePress()
-        end
-    end)
+	obj.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch and not dragging then
+			updateCenter()
+			dragging = true
+			activeTouch = input
+			moveInner(toV2(input.Position))
+			animatePress()
+		end
+	end)
 end
 
-UIS.TouchMoved:Connect(function(input)
-    if dragging and activeTouch and input == activeTouch then
-        moveInner(toV2(input.Position))
-    end
+UserInputService.TouchMoved:Connect(function(input)
+	if dragging and activeTouch and input == activeTouch then
+		moveInner(toV2(input.Position))
+	end
 end)
 
-UIS.TouchEnded:Connect(function(input)
-    if dragging and activeTouch and input == activeTouch then
-        dragging = false
-        activeTouch = nil
-        inner.Position = UDim2.new(0.5, -sizeInner/2, 0.5, -sizeInner/2)
-        _G.JoystickData.DraggingLevel = 0
-        _G.JoystickData.Direction = Vector3.new(0,0,0)
-        animateRelease()
-    end
+UserInputService.TouchEnded:Connect(function(input)
+	if dragging and activeTouch and input == activeTouch then
+		dragging = false
+		activeTouch = nil
+		inner.Position = UDim2.new(0.5, -sizeInner/2, 0.5, -sizeInner/2)
+		_G.JoystickData.DraggingLevel = 0
+		_G.JoystickData.Direction = Vector3.new(0, 0, 0)
+		animateRelease()
+	end
 end)
 
--- Joystick Setup
-local sizeOuter, sizeInner = 110, 50
-local radius = sizeOuter / 2
-local center, dragging, activeTouch
-
-local outer = Instance.new("ImageLabel", ScreenGui)
-outer.Size = UDim2.fromOffset(sizeOuter, sizeOuter)
-outer.Position = UDim2.new(0.1, 0, 0.75, 0)
-outer.AnchorPoint = Vector2.new(0.5, 0.5)
-outer.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-outer.BackgroundTransparency = 0.3
-outer.BorderSizePixel = 0
-outer.ZIndex = 5
-outer.Active = true
-outer.Image = "rbxasset://textures/ui/TouchControlsSheet.png"
-outer.ImageRectSize = Vector2.new(220, 220)
-Instance.new("UICorner", outer).CornerRadius = UDim.new(1,0)
-
-local inner = Instance.new("ImageLabel", outer)
-inner.Size = UDim2.fromOffset(sizeInner, sizeInner)
-inner.Position = UDim2.new(0.5, -sizeInner/2, 0.5, -sizeInner/2)
-inner.BackgroundColor3 = Color3.fromRGB(150,150,150)
-inner.BorderSizePixel = 0
-inner.ZIndex = 6
-inner.Active = true
-inner.Image = "rbxasset://textures/ui/TouchControlsSheet.png"
-inner.ImageRectOffset = Vector2.new(220, 0)
-inner.ImageRectSize = Vector2.new(111, 111)
-Instance.new("UICorner", inner).CornerRadius = UDim.new(1,0)
-
-_G.JoystickData = {
-    DraggingLevel = 0,
-    Direction = Vector3.new(0,0,0)
-}
-
-local function toV2(pos)
-    return Vector2.new(pos.X, pos.Y)
+-- ✅ FUNGSI SHOW/HIDE JOYSTICK
+_G.HideJoystick = function()
+	if not screenGui.Enabled then return end
+	for _, guiObj in ipairs(screenGui:GetDescendants()) do
+		if guiObj:IsA("Frame") or guiObj:IsA("ImageLabel") then
+			TweenService:Create(guiObj, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundTransparency = 1
+			}):Play()
+		end
+	end
+	task.delay(0.3, function()
+		screenGui.Enabled = false
+	end)
 end
 
-local function updateCenter()
-    center = Vector2.new(
-        outer.AbsolutePosition.X + radius,
-        outer.AbsolutePosition.Y + radius
-    )
+_G.ShowJoystick = function()
+	if screenGui.Enabled then return end
+	for _, guiObj in ipairs(screenGui:GetDescendants()) do
+		if guiObj:IsA("Frame") or guiObj:IsA("ImageLabel") then
+			guiObj.BackgroundTransparency = 1
+		end
+	end
+	screenGui.Enabled = true
+	for _, guiObj in ipairs(screenGui:GetDescendants()) do
+		if guiObj:IsA("Frame") or guiObj:IsA("ImageLabel") then
+			TweenService:Create(guiObj, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundTransparency = 0.3
+			}):Play()
+		end
+	end
 end
 
-local function moveInner(posV2)
-    local dir = posV2 - center
-    local dist = math.min(dir.Magnitude, radius)
-    local offset = dir.Magnitude > 0 and dir.Unit * dist or Vector2.new(0,0)
-    inner.Position = UDim2.new(0.5, offset.X - sizeInner/2, 0.5, offset.Y - sizeInner/2)
-
-    -- Digital-style direction
-    local threshold = 0.3
-    local dirX = math.abs(offset.X / radius) > threshold and math.sign(offset.X) or 0
-    local dirZ = math.abs(offset.Y / radius) > threshold and math.sign(offset.Y) or 0
-    local dir3 = Vector3.new(dirX, 0, dirZ)
-    local dragLevel = (dirX ~= 0 or dirZ ~= 0) and 100 or 0
-
-    _G.JoystickData.DraggingLevel = dragLevel
-    _G.JoystickData.Direction = dir3
-end
-
-local function animatePress()
-    TweenService:Create(outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.fromOffset(sizeOuter * 1.1, sizeOuter * 1.1),
-        BackgroundColor3 = Color3.fromRGB(120,120,120)
-    }):Play()
-    TweenService:Create(inner, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.fromOffset(sizeInner * 1.2, sizeInner * 1.2),
-        BackgroundColor3 = Color3.fromRGB(200,200,200)
-    }):Play()
-end
-
-local function animateRelease()
-    TweenService:Create(outer, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.fromOffset(sizeOuter, sizeOuter),
-        BackgroundColor3 = Color3.fromRGB(80,80,80)
-    }):Play()
-    TweenService:Create(inner, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.fromOffset(sizeInner, sizeInner),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    }):Play()
-end
-
-for _, obj in ipairs({outer, inner}) do
-    obj.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch and not dragging then
-            updateCenter()
-            dragging = true
-            activeTouch = input
-            moveInner(toV2(input.Position))
-            animatePress()
-        end
-    end)
-end
-
-UIS.TouchMoved:Connect(function(input)
-    if dragging and activeTouch and input == activeTouch then
-        moveInner(toV2(input.Position))
-    end
-end)
-
-UIS.TouchEnded:Connect(function(input)
-    if dragging and activeTouch and input == activeTouch then
-        dragging = false
-        activeTouch = nil
-        inner.Position = UDim2.new(0.5, -sizeInner/2, 0.5, -sizeInner/2)
-        _G.JoystickData.DraggingLevel = 0
-        _G.JoystickData.Direction = Vector3.new(0,0,0)
-        animateRelease()
-    end
-end)
-
--- FreeCam Setup
-local camera = workspace.CurrentCamera
-local movePart = Instance.new("Part", workspace)
+-- ✅ CAMERA PART UNTUK FREEMOVE
+local movePart = Instance.new("Part")
 movePart.Size = Vector3.new(0, 0, 0)
 movePart.Anchored = true
 movePart.Transparency = 1
 movePart.CanCollide = false
-movePart.Name = "CameraPart"
+movePart.Parent = workspace
 movePart.CFrame = camera.CFrame
+movePart.Name = "CameraPart"
 
 local currentPos = movePart.Position
-local verticalDir = 0
 
--- Toggle FreeCam Button
-local freeCamToggle = Instance.new("TextButton", ScreenGui)
-freeCamToggle.Size = UDim2.new(0, 120, 0, 50)
-freeCamToggle.Position = UDim2.new(0, 30, 0, 30)
-freeCamToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-freeCamToggle.TextColor3 = Color3.new(1, 1, 1)
-freeCamToggle.Text = "FreeCam ON"
-freeCamToggle.Active = true
-freeCamToggle.Draggable = true
+-- ✅ KAMERA TOGGLE HANDLER
+local toggle = localPlayer:FindFirstChild("FreeMoveEnabled")
+local origMinZoom = localPlayer.CameraMinZoomDistance
+local origMaxZoom = localPlayer.CameraMaxZoomDistance
 
--- Tombol Naik & Turun
-local upBtn = Instance.new("TextButton", ScreenGui)
-upBtn.Size = UDim2.new(0, 60, 0, 60)
-upBtn.Position = UDim2.new(1, -80, 0.5, -70)
-upBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
-upBtn.TextColor3 = Color3.new(1, 1, 1)
-upBtn.Text = "↑"
-upBtn.TextScaled = true
-upBtn.Font = Enum.Font.SourceSansBold
-upBtn.Visible = true
-
-local downBtn = Instance.new("TextButton", ScreenGui)
-downBtn.Size = UDim2.new(0, 60, 0, 60)
-downBtn.Position = UDim2.new(1, -80, 0.5, 10)
-downBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
-downBtn.TextColor3 = Color3.new(1, 1, 1)
-downBtn.Text = "↓"
-downBtn.TextScaled = true
-downBtn.Font = Enum.Font.SourceSansBold
-downBtn.Visible = true
-
--- Event Tombol Naik/Turun
-upBtn.MouseButton1Down:Connect(function() verticalDir = 1 end)
-upBtn.MouseButton1Up:Connect(function() verticalDir = 0 end)
-downBtn.MouseButton1Down:Connect(function() verticalDir = -1 end)
-downBtn.MouseButton1Up:Connect(function() verticalDir = 0 end)
-
--- Toggle Logic
-local freeCamEnabled = true
-
-local function applyFreeCam(state)
-    freeCamEnabled = state
-    freeCamToggle.Text = state and "FreeCam ON" or "FreeCam OFF"
-    upBtn.Visible = state
-    downBtn.Visible = state
-
-    if state then
-        camera.CameraSubject = movePart
-        camera.CameraType = Enum.CameraType.Custom
-    else
-        camera.CameraSubject = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("Humanoid") or nil
-    end
+local function applyToggle(state)
+	if state then
+		camera.CameraSubject = movePart
+		camera.CameraType = Enum.CameraType.Custom
+		localPlayer.CameraMinZoomDistance = 0
+		localPlayer.CameraMaxZoomDistance = 0
+		if _G.ShowJoystick then _G.ShowJoystick() end
+	else
+		camera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") or nil
+		localPlayer.CameraMinZoomDistance = origMinZoom
+		localPlayer.CameraMaxZoomDistance = origMaxZoom
+		if _G.HideJoystick then _G.HideJoystick() end
+	end
 end
 
-freeCamToggle.MouseButton1Click:Connect(function()
-    applyFreeCam(not freeCamEnabled)
-end)
+toggle.Changed:Connect(applyToggle)
+applyToggle(toggle.Value)
 
-applyFreeCam(true)
+-- ✅ KAMERA MOVEMENT DARI JOYSTICK
+RunService.RenderStepped:Connect(function(dt)
+	if not toggle.Value then return end
+	local dir = _G.JoystickData.Direction
+	local level = _G.JoystickData.DraggingLevel
 
--- Movement Logic
-game:GetService("RunService").RenderStepped:Connect(function(dt)
-    if not freeCamEnabled then return end
+	if level > 1 then
+		local moveSpeed = level * 0.02
+		local camCF = camera.CFrame
+		local forward = camCF.LookVector
+		local right = camCF.RightVector
+		local moveDir = (forward * -dir.Z) + (right * dir.X)
+		moveDir += Vector3.new(0, dir.Y, 0)
+		if moveDir.Magnitude > 0 then
+			moveDir = moveDir.Unit
+			currentPos = currentPos + moveDir * moveSpeed * dt * 60
+		end
+	end
 
-    local dir = _G.JoystickData.Direction
-    local level = _G.JoystickData.DraggingLevel
-
-    if level > 0 then
-        local moveSpeed = 0.5
-        local camCF = camera.CFrame
-        local forward = camCF.LookVector
-        local right = camCF.RightVector
-        local moveDir = (forward * -dir.Z) + (right * dir.X)
-        moveDir = moveDir.Unit
-        currentPos = currentPos + moveDir * moveSpeed * dt * 60
-    end
-
-    if verticalDir ~= 0 then
-        currentPos = currentPos + Vector3.new(0, verticalDir * 0.5, 0)
-    end
-
-    local camLook = camera.CFrame.LookVector
-    local yaw = math.atan2(camLook.X, camLook.Z)
-    movePart.CFrame = CFrame.new(currentPos) * CFrame.Angles(0, yaw, 0)
+	local camLook = camera.CFrame.LookVector
+	local yaw = math.atan2(camLook.X, camLook.Z)
+	movePart.CFrame = CFrame.new(currentPos) * CFrame.Angles(0, yaw, 0)
 end)
