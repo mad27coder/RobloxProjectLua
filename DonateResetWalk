@@ -1,37 +1,28 @@
---  Global Settings
+-- Pengaturan awal
 getgenv().autoThank = false
 getgenv().promoSpam = false
-getgenv().autoFlyToDeath = true
 
---  Services
+-- Services
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
 local VirtualUser = game:GetService("VirtualUser")
-local StarterGui = game:GetService("StarterGui")
-local player = Players.LocalPlayer
+local localPlayer = Players.LocalPlayer
 local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
 
---  Anti-AFK
-player.Idled:Connect(function()
+-- Anti-AFK
+Players.LocalPlayer.Idled:Connect(function()
 	VirtualUser:CaptureController()
 	VirtualUser:ClickButton1(Vector2.new(0, 0))
 end)
 
---  Notification
-StarterGui:SetCore("SendNotification", {
-	Title = "✅ Script Executed",
-	Text = "Auto Thank, Promo, Death Marker & Fly enabled.",
-	Duration = 4
-})
-
---  GUI Setup
-local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
 ScreenGui.Name = "AutoGUI"
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 220, 0, 200)
-Frame.Position = UDim2.new(0.5, -110, 0.5, -100)
+Frame.Size = UDim2.new(0, 220, 0, 160)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -80)
 Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.Active = true
 Frame.Draggable = true
@@ -52,7 +43,7 @@ toggleButton.MouseButton1Click:Connect(function()
 	Frame.Visible = guiVisible
 end)
 
---  GUI Elements
+-- GUI Elements
 local ThankButton = Instance.new("TextButton", Frame)
 ThankButton.Size = UDim2.new(0, 200, 0, 40)
 ThankButton.Position = UDim2.new(0, 10, 0, 10)
@@ -65,15 +56,9 @@ PromoButton.Position = UDim2.new(0, 10, 0, 60)
 PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 PromoButton.TextColor3 = Color3.new(1, 1, 1)
 
-local FlyToggle = Instance.new("TextButton", Frame)
-FlyToggle.Size = UDim2.new(0, 200, 0, 40)
-FlyToggle.Position = UDim2.new(0, 10, 0, 110)
-FlyToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-FlyToggle.TextColor3 = Color3.new(1, 1, 1)
-
 local StatusLabel = Instance.new("TextLabel", Frame)
 StatusLabel.Size = UDim2.new(0, 200, 0, 20)
-StatusLabel.Position = UDim2.new(0, 10, 0, 155)
+StatusLabel.Position = UDim2.new(0, 10, 0, 105)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.TextColor3 = Color3.new(1, 1, 1)
 StatusLabel.TextScaled = true
@@ -90,26 +75,23 @@ SignatureLabel.TextScaled = true
 local function updateGUI()
 	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
 	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
-	FlyToggle.Text = "Toggle Auto Fly (" .. (getgenv().autoFlyToDeath and "ON" or "OFF") .. ")"
-	StatusLabel.Text = "Status: Thank " .. (getgenv().autoThank and "ON" or "OFF") ..
-		" / Promo " .. (getgenv().promoSpam and "ON" or "OFF") ..
-		" / Fly " .. (getgenv().autoFlyToDeath and "ON" or "OFF")
+	StatusLabel.Text = "Status: Thank " .. (getgenv().autoThank and "ON" or "OFF") .. " / Promo " .. (getgenv().promoSpam and "ON" or "OFF")
 end
 
 updateGUI()
 
---  Messages
+-- Messages
 local thankMessages = {
 	"Thank you so much! With that donation, my avatar can finally stop eating imaginary noodles. Ramen is great, but air ramen? Not so much.",
 }
 
 local promoMessages = {
-	"Support the cause! Every bit helps. ",
+	"Support the cause! Every bit helps. 💖",
 	"Join the movement! Your donation makes a difference.",
 	"Thanks for being awesome! Keep the support coming!",
 }
 
---  Promo Delay System
+-- Promo Delay System
 local promoDelayUntil = 0
 local promoPauseOnDonation = 36
 
@@ -117,9 +99,10 @@ local function getRandomPromoInterval()
 	return math.random(15, 20)
 end
 
---  Shuffle
+-- Shuffle function
 local function shuffle(array)
-	local shuffled, indices = {}, {}
+	local shuffled = {}
+	local indices = {}
 	for i = 1, #array do table.insert(indices, i) end
 	for i = #indices, 2, -1 do
 		local j = math.random(i)
@@ -134,7 +117,7 @@ end
 local shuffledPromo = shuffle(promoMessages)
 local shuffledIndex = 1
 
---  Auto Promo Logic
+-- Auto Promo Logic
 task.spawn(function()
 	while true do
 		if getgenv().promoSpam then
@@ -156,53 +139,46 @@ task.spawn(function()
 	end
 end)
 
---  Auto Thank Logic + BreakJoints + Promo Pause
-local leaderstats = player:WaitForChild("leaderstats")
+-- Auto Thank Logic + Promo Pause Trigger
+local leaderstats = localPlayer:WaitForChild("leaderstats")
 local raisedStat = leaderstats:WaitForChild("Raised")
 local lastRaised = raisedStat.Value
 
-raisedStat.Changed:Connect(function()
-	if getgenv().autoThank then
-		local newRaised = raisedStat.Value
-		if newRaised > lastRaised then
-			if chat then
-				local msg = thankMessages[math.random(1, #thankMessages)]
-				chat:SendAsync(msg)
-			end
-			lastRaised = newRaised
+if chat then
+	local msg = thankMessages[math.random(1, #thankMessages)]
+	chat:SendAsync(msg)
 
-			--  Break joints after 5 seconds
-			task.delay(5, function()
-				if player.Character then
-					player.Character:BreakJoints()
-				end
-			end)
+	-- Hancurkan karakter setelah 5 detik
+	task.delay(5, function()
+		if localPlayer.Character then
+			localPlayer.Character:BreakJoints()
+		end
+	end)
+end
+lastRaised = newRaised
 		end
 	end
+	-- Pause promo for 36 seconds
 	promoDelayUntil = tick() + promoPauseOnDonation
 end)
 
---  Button Logic
-ThankButton.MouseButton1Click:Connect(function()
-	getgenv().autoThank = not getgenv().autoThank
-	updateGUI()
-end)
-
-PromoButton.MouseButton1Click:Connect(function()
-	getgenv().promoSpam = not getgenv().promoSpam
-	updateGUI()
-end)
-
-FlyToggle.MouseButton1Click:Connect(function()
-	getgenv().autoFlyToDeath = not getgenv().autoFlyToDeath
-	updateGUI()
-end)
-
---  Death Marker + Auto Fly
+-- LocalScript (StarterPlayerScripts)
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local player = Players.LocalPlayer
 local marker = nil
 
+-- ✅ Notifikasi saat script aktif
+StarterGui:SetCore("SendNotification", {
+	Title = "✅ Script Executed",
+	Text = "Death marker & auto-fly enabled.",
+	Duration = 4
+})
+
+-- Utility: Buat marker di posisi kematian
 local function createDeathMarker(position)
 	if marker then marker:Destroy() end
+
 	marker = Instance.new("Part")
 	marker.Anchored = true
 	marker.CanCollide = false
@@ -213,6 +189,7 @@ local function createDeathMarker(position)
 	marker.Parent = workspace
 end
 
+-- Utility: Anti-sit brutal
 local function destroySit(humanoid)
 	task.spawn(function()
 		while humanoid and humanoid.Parent do
@@ -223,6 +200,71 @@ local function destroySit(humanoid)
 	end)
 end
 
+-- Utility: Fly ke marker dengan takeoff dulu
 local function flyToMarker(humanoid, root)
 	if not marker then return end
+
 	local targetPos = marker.Position + Vector3.new(0, 5, 0)
+	local ascendTarget = root.Position + Vector3.new(0, 5, 0)
+
+	local bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+	bv.Velocity = Vector3.zero
+	bv.Parent = root
+
+	-- Step 1: Naik vertikal dulu
+	while (root.Position - ascendTarget).Magnitude > 0.5 do
+		local direction = (ascendTarget - root.Position).Unit
+		bv.Velocity = direction * 20
+		task.wait(0.05)
+	end
+
+	-- Step 2: Terbang ke marker
+	while (root.Position - targetPos).Magnitude > 1.5 do
+		local direction = (targetPos - root.Position).Unit
+		bv.Velocity = direction * 30
+		task.wait(0.05)
+	end
+
+	bv:Destroy()
+	marker:Destroy()
+	marker = nil
+end
+
+-- Main logic
+player.CharacterAdded:Connect(function(char)
+	local humanoid = char:WaitForChild("Humanoid")
+
+	-- Anti-sit
+	destroySit(humanoid)
+
+	-- Buat marker saat mati
+	humanoid.Died:Connect(function()
+		local root = char:FindFirstChild("HumanoidRootPart")
+		if root then
+			createDeathMarker(root.Position)
+		end
+	end)
+
+	-- Setelah respawn, fly ke marker
+	task.spawn(function()
+		local root
+		repeat
+			root = char:FindFirstChild("HumanoidRootPart")
+			task.wait()
+		until root
+
+		flyToMarker(humanoid, root)
+	end)
+end)
+
+-- Button Logic
+ThankButton.MouseButton1Click:Connect(function()
+	getgenv().autoThank = not getgenv().autoThank
+	updateGUI()
+end)
+
+PromoButton.MouseButton1Click:Connect(function()
+	getgenv().promoSpam = not getgenv().promoSpam
+	updateGUI()
+end)
