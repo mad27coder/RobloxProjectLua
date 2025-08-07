@@ -232,3 +232,102 @@ UIS.TouchEnded:Connect(function(input)
         animateRelease()
     end
 end)
+
+-- FreeCam Setup
+local camera = workspace.CurrentCamera
+local movePart = Instance.new("Part", workspace)
+movePart.Size = Vector3.new(0, 0, 0)
+movePart.Anchored = true
+movePart.Transparency = 1
+movePart.CanCollide = false
+movePart.Name = "CameraPart"
+movePart.CFrame = camera.CFrame
+
+local currentPos = movePart.Position
+local verticalDir = 0
+
+-- Toggle FreeCam Button
+local freeCamToggle = Instance.new("TextButton", ScreenGui)
+freeCamToggle.Size = UDim2.new(0, 120, 0, 50)
+freeCamToggle.Position = UDim2.new(0, 30, 0, 30)
+freeCamToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+freeCamToggle.TextColor3 = Color3.new(1, 1, 1)
+freeCamToggle.Text = "FreeCam ON"
+freeCamToggle.Active = true
+freeCamToggle.Draggable = true
+
+-- Tombol Naik & Turun
+local upBtn = Instance.new("TextButton", ScreenGui)
+upBtn.Size = UDim2.new(0, 60, 0, 60)
+upBtn.Position = UDim2.new(1, -80, 0.5, -70)
+upBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+upBtn.TextColor3 = Color3.new(1, 1, 1)
+upBtn.Text = "↑"
+upBtn.TextScaled = true
+upBtn.Font = Enum.Font.SourceSansBold
+upBtn.Visible = true
+
+local downBtn = Instance.new("TextButton", ScreenGui)
+downBtn.Size = UDim2.new(0, 60, 0, 60)
+downBtn.Position = UDim2.new(1, -80, 0.5, 10)
+downBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+downBtn.TextColor3 = Color3.new(1, 1, 1)
+downBtn.Text = "↓"
+downBtn.TextScaled = true
+downBtn.Font = Enum.Font.SourceSansBold
+downBtn.Visible = true
+
+-- Event Tombol Naik/Turun
+upBtn.MouseButton1Down:Connect(function() verticalDir = 1 end)
+upBtn.MouseButton1Up:Connect(function() verticalDir = 0 end)
+downBtn.MouseButton1Down:Connect(function() verticalDir = -1 end)
+downBtn.MouseButton1Up:Connect(function() verticalDir = 0 end)
+
+-- Toggle Logic
+local freeCamEnabled = true
+
+local function applyFreeCam(state)
+    freeCamEnabled = state
+    freeCamToggle.Text = state and "FreeCam ON" or "FreeCam OFF"
+    upBtn.Visible = state
+    downBtn.Visible = state
+
+    if state then
+        camera.CameraSubject = movePart
+        camera.CameraType = Enum.CameraType.Custom
+    else
+        camera.CameraSubject = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("Humanoid") or nil
+    end
+end
+
+freeCamToggle.MouseButton1Click:Connect(function()
+    applyFreeCam(not freeCamEnabled)
+end)
+
+applyFreeCam(true)
+
+-- Movement Logic
+game:GetService("RunService").RenderStepped:Connect(function(dt)
+    if not freeCamEnabled then return end
+
+    local dir = _G.JoystickData.Direction
+    local level = _G.JoystickData.DraggingLevel
+
+    if level > 0 then
+        local moveSpeed = 0.5
+        local camCF = camera.CFrame
+        local forward = camCF.LookVector
+        local right = camCF.RightVector
+        local moveDir = (forward * -dir.Z) + (right * dir.X)
+        moveDir = moveDir.Unit
+        currentPos = currentPos + moveDir * moveSpeed * dt * 60
+    end
+
+    if verticalDir ~= 0 then
+        currentPos = currentPos + Vector3.new(0, verticalDir * 0.5, 0)
+    end
+
+    local camLook = camera.CFrame.LookVector
+    local yaw = math.atan2(camLook.X, camLook.Z)
+    movePart.CFrame = CFrame.new(currentPos) * CFrame.Angles(0, yaw, 0)
+end)
