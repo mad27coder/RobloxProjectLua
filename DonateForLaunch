@@ -1,123 +1,168 @@
+-- 🔧 Services
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+local VirtualUser = game:GetService("VirtualUser")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
 
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local root = character:WaitForChild("HumanoidRootPart")
-local humanoid = character:WaitForChild("Humanoid")
+local localPlayer = Players.LocalPlayer
+local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
 
--- 🧩 GUI Setup
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "RocketGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
+-- 💤 Anti-AFK
+localPlayer.Idled:Connect(function()
+	VirtualUser:CaptureController()
+	VirtualUser:ClickButton1(Vector2.new(0, 0))
+end)
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 150, 0, 60)
-frame.Position = UDim2.new(0, 20, 0, 100)
-frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-frame.Parent = screenGui
-
-local launchButton = Instance.new("TextButton")
-launchButton.Size = UDim2.new(1, -20, 1, -20)
-launchButton.Position = UDim2.new(0, 10, 0, 10)
-launchButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-launchButton.TextColor3 = Color3.new(1, 1, 1)
-launchButton.Font = Enum.Font.GothamBold
-launchButton.TextSize = 18
-launchButton.Text = "LAUNCH"
-launchButton.Parent = frame
-
--- 🚀 Launch Logic
+-- 🧠 State
+local autoLaunchEnabled = true
 local isLaunching = false
+local lastRaised = 0
 
-local function startRocketSequence()
-	if isLaunching then return end
+-- 🎛️ GUI Setup
+local ScreenGui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
+ScreenGui.Name = "RocketGUI"
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 220, 0, 100)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -50)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.Active = true
+Frame.Draggable = true
+
+local toggleButton = Instance.new("TextButton", ScreenGui)
+toggleButton.Size = UDim2.new(0, 40, 0, 40)
+toggleButton.Position = UDim2.new(1, -45, 0.5, -20)
+toggleButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Text = "≡"
+toggleButton.ZIndex = 10
+toggleButton.Active = true
+toggleButton.Draggable = true
+
+local guiVisible = true
+toggleButton.MouseButton1Click:Connect(function()
+	guiVisible = not guiVisible
+	Frame.Visible = guiVisible
+end)
+
+-- 🚀 Launch Buttons
+local LaunchButton = Instance.new("TextButton", Frame)
+LaunchButton.Size = UDim2.new(0, 200, 0, 40)
+LaunchButton.Position = UDim2.new(0, 10, 0, 10)
+LaunchButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+LaunchButton.TextColor3 = Color3.new(1, 1, 1)
+LaunchButton.Font = Enum.Font.GothamBold
+LaunchButton.TextSize = 16
+LaunchButton.Text = "Manual Launch"
+
+local AutoLaunchButton = Instance.new("TextButton", Frame)
+AutoLaunchButton.Size = UDim2.new(0, 200, 0, 40)
+AutoLaunchButton.Position = UDim2.new(0, 10, 0, 55)
+AutoLaunchButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+AutoLaunchButton.TextColor3 = Color3.new(1, 1, 1)
+AutoLaunchButton.Font = Enum.Font.GothamBold
+AutoLaunchButton.TextSize = 16
+AutoLaunchButton.Text = "Auto Launch: ON"
+
+AutoLaunchButton.MouseButton1Click:Connect(function()
+	autoLaunchEnabled = not autoLaunchEnabled
+	AutoLaunchButton.Text = "Auto Launch: " .. (autoLaunchEnabled and "ON" or "OFF")
+	AutoLaunchButton.BackgroundColor3 = autoLaunchEnabled and Color3.fromRGB(60, 60, 60) or Color3.fromRGB(30, 30, 30)
+end)
+
+LaunchButton.MouseButton1Click:Connect(function()
+	if not isLaunching then startRocketSequence() end
+end)
+
+-- 🚀 Launch Sequence
+function startRocketSequence()
+	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+	local root = character:WaitForChild("HumanoidRootPart")
+	local humanoid = character:WaitForChild("Humanoid")
+
 	isLaunching = true
-
-	launchButton.Text = "LAUNCHED"
-	launchButton.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
-	launchButton.AutoButtonColor = false
-	launchButton.Active = false
-
 	humanoid.PlatformStand = true
 	humanoid.AutoRotate = false
 
-	local initialPosition = root.Position
+	local origin = root.Position
 	local platform = Instance.new("Part")
 	platform.Anchored = true
 	platform.CanCollide = false
 	platform.Transparency = 1
 	platform.Size = Vector3.new(6, 1, 6)
-	platform.Position = initialPosition
+	platform.Position = origin
 	platform.Parent = workspace
 
-	local spin = Instance.new("BodyAngularVelocity")
-	spin.AngularVelocity = Vector3.new(0, math.rad(6000), 0)
+	local spin = Instance.new("BodyAngularVelocity", root)
+	spin.AngularVelocity = Vector3.new(0, math.rad(720), 0)
 	spin.MaxTorque = Vector3.new(0, math.huge, 0)
 	spin.P = 10000
-	spin.Parent = root
 
-	local uprightGyro = Instance.new("BodyGyro")
-	uprightGyro.MaxTorque = Vector3.new(400000, 0, 400000)
-	uprightGyro.P = 10000
-	uprightGyro.CFrame = root.CFrame
-	uprightGyro.Parent = root
+	local gyro = Instance.new("BodyGyro", root)
+	gyro.MaxTorque = Vector3.new(400000, 0, 400000)
+	gyro.P = 10000
+	gyro.CFrame = root.CFrame
 
-	local follow = Instance.new("BodyPosition")
+	local follow = Instance.new("BodyPosition", root)
 	follow.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
 	follow.P = 10000
 	follow.D = 100
 	follow.Position = platform.Position + Vector3.new(0, 5, 0)
-	follow.Parent = root
 
-	local state = "spin"
-	local phaseStart = tick()
+	local state, phaseStart = "spin", tick()
 
 	local conn
 	conn = RunService.Heartbeat:Connect(function()
-		local elapsed = tick() - phaseStart
-
-		uprightGyro.CFrame = CFrame.new(root.Position) * CFrame.Angles(0, root.Orientation.Y, 0)
+		local t = tick() - phaseStart
+		gyro.CFrame = CFrame.new(root.Position) * CFrame.Angles(0, root.Orientation.Y, 0)
 		follow.Position = platform.Position + Vector3.new(0, 5, 0)
 
-		if state == "spin" and elapsed >= 15 then
+		if state == "spin" and t >= 15 then
 			state = "fly"
 			phaseStart = tick()
-			TweenService:Create(platform, TweenInfo.new(20, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+			TweenService:Create(platform, TweenInfo.new(20, Enum.EasingStyle.Sine), {
 				Position = Vector3.new(platform.Position.X, 500, platform.Position.Z)
 			}):Play()
 
-		elseif state == "fly" and elapsed >= 20 then
+		elseif state == "fly" and t >= 20 then
 			state = "fall"
 			phaseStart = tick()
-			TweenService:Create(platform, TweenInfo.new(10, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {
-				Position = Vector3.new(platform.Position.X, initialPosition.Y, platform.Position.Z)
+			TweenService:Create(platform, TweenInfo.new(10, Enum.EasingStyle.Sine), {
+				Position = origin
 			}):Play()
 
-		elseif state == "fall" and elapsed >= 10 then
+		elseif state == "fall" and t >= 10 then
 			state = "reset"
 			conn:Disconnect()
-
 			spin:Destroy()
 			follow:Destroy()
-			uprightGyro:Destroy()
+			gyro:Destroy()
 			platform:Destroy()
-
 			humanoid.PlatformStand = false
 			humanoid.AutoRotate = true
-
 			isLaunching = false
-			launchButton.Text = "LAUNCH"
-			launchButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-			launchButton.Active = true
 		end
 	end)
 end
 
--- 🔘 Trigger dari tombol
-launchButton.MouseButton1Click:Connect(startRocketSequence)
+-- 📈 Raised Listener with Delay
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local raisedStat = leaderstats:WaitForChild("Raised")
+lastRaised = raisedStat.Value
+
+raisedStat.Changed:Connect(function()
+	local newRaised = raisedStat.Value
+	if newRaised > lastRaised then
+		lastRaised = newRaised
+		if autoLaunchEnabled and not isLaunching then
+			task.delay(3, function()
+				if autoLaunchEnabled and not isLaunching then
+					startRocketSequence()
+				end
+			end)
+		end
+	end
+end)
