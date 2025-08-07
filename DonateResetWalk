@@ -1,18 +1,33 @@
 -- Pengaturan awal
-getgenv().autoThank = false
-getgenv().promoSpam = false
+getgenv().breakOnRaised = false
 
 -- Services
 local Players = game:GetService("Players")
-local TextChatService = game:GetService("TextChatService")
+local StarterGui = game:GetService("StarterGui")
 local VirtualUser = game:GetService("VirtualUser")
 local localPlayer = Players.LocalPlayer
-local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
 
 local marker = nil
+local resetCooldown = 10
+local lastResetTime = 0
 
+-- ✅ Notifikasi saat script aktif
+StarterGui:SetCore("SendNotification", {
+	Title = "✅ Script Executed",
+	Text = "Death marker & auto-fly enabled.",
+	Duration = 4
+})
+
+-- Anti-AFK
+Players.LocalPlayer.Idled:Connect(function()
+	VirtualUser:CaptureController()
+	VirtualUser:ClickButton1(Vector2.new(0, 0))
+end)
+
+-- Buat marker di posisi kematian
 local function createDeathMarker(position)
 	if marker then marker:Destroy() end
+
 	marker = Instance.new("Part")
 	marker.Anchored = true
 	marker.CanCollide = false
@@ -23,6 +38,7 @@ local function createDeathMarker(position)
 	marker.Parent = workspace
 end
 
+-- Anti-sit brutal
 local function destroySit(humanoid)
 	task.spawn(function()
 		while humanoid and humanoid.Parent do
@@ -33,6 +49,7 @@ local function destroySit(humanoid)
 	end)
 end
 
+-- Fly ke marker dengan takeoff dulu
 local function flyToMarker(humanoid, root)
 	if not marker then return end
 
@@ -61,10 +78,28 @@ local function flyToMarker(humanoid, root)
 	marker = nil
 end
 
--- Anti-AFK
-Players.LocalPlayer.Idled:Connect(function()
-	VirtualUser:CaptureController()
-	VirtualUser:ClickButton1(Vector2.new(0, 0))
+-- Character logic
+localPlayer.CharacterAdded:Connect(function(char)
+	local humanoid = char:WaitForChild("Humanoid")
+
+	destroySit(humanoid)
+
+	humanoid.Died:Connect(function()
+		local root = char:FindFirstChild("HumanoidRootPart")
+		if root then
+			createDeathMarker(root.Position)
+		end
+	end)
+
+	task.spawn(function()
+		local root
+		repeat
+			root = char:FindFirstChild("HumanoidRootPart")
+			task.wait()
+		until root
+
+		flyToMarker(humanoid, root)
+	end)
 end)
 
 -- GUI Setup
@@ -73,8 +108,8 @@ ScreenGui.Name = "AutoGUI"
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 220, 0, 160)
-Frame.Position = UDim2.new(0.5, -110, 0.5, -80)
+Frame.Size = UDim2.new(0, 220, 0, 120)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -60)
 Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.Active = true
 Frame.Draggable = true
@@ -96,24 +131,19 @@ toggleButton.MouseButton1Click:Connect(function()
 end)
 
 -- GUI Elements
-local ThankButton = Instance.new("TextButton", Frame)
-ThankButton.Size = UDim2.new(0, 200, 0, 40)
-ThankButton.Position = UDim2.new(0, 10, 0, 10)
-ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-ThankButton.TextColor3 = Color3.new(1, 1, 1)
+local BreakToggle = Instance.new("TextButton", Frame)
+BreakToggle.Size = UDim2.new(0, 200, 0, 40)
+BreakToggle.Position = UDim2.new(0, 10, 0, 10)
+BreakToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+BreakToggle.TextColor3 = Color3.new(1, 1, 1)
 
-local PromoButton = Instance.new("TextButton", Frame)
-PromoButton.Size = UDim2.new(0, 200, 0, 40)
-PromoButton.Position = UDim2.new(0, 10, 0, 60)
-PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-PromoButton.TextColor3 = Color3.new(1, 1, 1)
-
-local StatusLabel = Instance.new("TextLabel", Frame)
-StatusLabel.Size = UDim2.new(0, 200, 0, 20)
-StatusLabel.Position = UDim2.new(0, 10, 0, 105)
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.TextColor3 = Color3.new(1, 1, 1)
-StatusLabel.TextScaled = true
+local MarkerLabel = Instance.new("TextLabel", Frame)
+MarkerLabel.Size = UDim2.new(0, 200, 0, 20)
+MarkerLabel.Position = UDim2.new(0, 10, 0, 60)
+MarkerLabel.BackgroundTransparency = 1
+MarkerLabel.TextColor3 = Color3.new(1, 1, 1)
+MarkerLabel.TextScaled = true
+MarkerLabel.Text = "Marker: Belum ada"
 
 local SignatureLabel = Instance.new("TextLabel", Frame)
 SignatureLabel.Size = UDim2.new(0, 200, 0, 20)
@@ -125,124 +155,62 @@ SignatureLabel.Font = Enum.Font.SourceSansBold
 SignatureLabel.TextScaled = true
 
 local function updateGUI()
-	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
-	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
-	StatusLabel.Text = "Status: Thank " .. (getgenv().autoThank and "ON" or "OFF") .. " / Promo " .. (getgenv().promoSpam and "ON" or "OFF")
+	BreakToggle.Text = "Toggle BreakJoints (" .. (getgenv().breakOnRaised and "ON" or "OFF") .. ")"
+end
+
+local function updateMarkerLabel()
+	local marker = workspace:FindFirstChild("DeathMarker")
+	if marker then
+		local pos = marker.Position
+		MarkerLabel.Text = string.format("Marker: (%.1f, %.1f, %.1f)", pos.X, pos.Y, pos.Z)
+	else
+		MarkerLabel.Text = "Marker: Belum ada"
+	end
 end
 
 updateGUI()
-
-local char = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-local humanoid = char:WaitForChild("Humanoid")
-local root = char:WaitForChild("HumanoidRootPart")
-
-destroySit(humanoid)
-createDeathMarker(root.Position)
-
-task.delay(0.5, function()
-	char:BreakJoints()
-
-	task.delay(1, function()
-		localPlayer:LoadCharacter()
-
-		local newChar = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-		local newHumanoid = newChar:WaitForChild("Humanoid")
-		local newRoot = newChar:WaitForChild("HumanoidRootPart")
-
-		destroySit(newHumanoid)
-		flyToMarker(newHumanoid, newRoot)
-	end)
-end)
-
--- Messages
-local thankMessages = {
-	"Thank you so much! With that donation, my avatar can finally stop eating imaginary noodles. Ramen is great, but air ramen? Not so much.",
-}
-
-local promoMessages = {
-	"Support the cause! Every bit helps. 💖",
-	"Join the movement! Your donation makes a difference.",
-	"Thanks for being awesome! Keep the support coming!",
-}
-
--- Promo Delay System
-local promoDelayUntil = 0
-local promoPauseOnDonation = 36
-
-local function getRandomPromoInterval()
-	return math.random(15, 20)
-end
-
--- Shuffle function
-local function shuffle(array)
-	local shuffled = {}
-	local indices = {}
-	for i = 1, #array do table.insert(indices, i) end
-	for i = #indices, 2, -1 do
-		local j = math.random(i)
-		indices[i], indices[j] = indices[j], indices[i]
-	end
-	for _, i in ipairs(indices) do
-		table.insert(shuffled, array[i])
-	end
-	return shuffled
-end
-
-local shuffledPromo = shuffle(promoMessages)
-local shuffledIndex = 1
-
--- Auto Promo Logic
 task.spawn(function()
 	while true do
-		if getgenv().promoSpam then
-			local currentTime = tick()
-			if currentTime >= promoDelayUntil then
-				if chat then
-					local msg = shuffledPromo[shuffledIndex]
-					chat:SendAsync(msg)
-					shuffledIndex += 1
-					if shuffledIndex > #shuffledPromo then
-						shuffledPromo = shuffle(promoMessages)
-						shuffledIndex = 1
-					end
-				end
-				promoDelayUntil = currentTime + getRandomPromoInterval()
-			end
-		end
-		task.wait(1)
+		updateMarkerLabel()
+		task.wait(2)
 	end
 end)
 
--- Auto Thank Logic + Promo Pause Trigger
+BreakToggle.MouseButton1Click:Connect(function()
+	getgenv().breakOnRaised = not getgenv().breakOnRaised
+	updateGUI()
+end)
+
+-- Raised Trigger
 local leaderstats = localPlayer:WaitForChild("leaderstats")
 local raisedStat = leaderstats:WaitForChild("Raised")
 local lastRaised = raisedStat.Value
 
-if chat then
-	local msg = thankMessages[math.random(1, #thankMessages)]
-	chat:SendAsync(msg)
+raisedStat.Changed:Connect(function()
+	local newRaised = raisedStat.Value
+	local now = tick()
 
-	-- Hancurkan karakter setelah 5 detik
-	task.delay(5, function()
-		if localPlayer.Character then
-			localPlayer.Character:BreakJoints()
-		end
-	end)
-end
-lastRaised = newRaised
+	if getgenv().breakOnRaised and newRaised > lastRaised and now - lastResetTime >= resetCooldown then
+		local character = localPlayer.Character
+		if character then
+			lastResetTime = now
+			character:BreakJoints()
+
+			-- Flash effect
+			local flash = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
+			local frame = Instance.new("Frame", flash)
+			frame.Size = UDim2.new(1, 0, 1, 0)
+			frame.BackgroundColor3 = Color3.new(1, 1, 1)
+			frame.BackgroundTransparency = 0
+			task.spawn(function()
+				for i = 0, 1, 0.1 do
+					frame.BackgroundTransparency = i
+					task.wait(0.05)
+				end
+				flash:Destroy()
+			end)
 		end
 	end
-	-- Pause promo for 36 seconds
-	promoDelayUntil = tick() + promoPauseOnDonation
-end)
 
--- Button Logic
-ThankButton.MouseButton1Click:Connect(function()
-	getgenv().autoThank = not getgenv().autoThank
-	updateGUI()
-end)
-
-PromoButton.MouseButton1Click:Connect(function()
-	getgenv().promoSpam = not getgenv().promoSpam
-	updateGUI()
+	lastRaised = newRaised
 end)
