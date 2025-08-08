@@ -74,7 +74,10 @@ AutoLaunchButton.MouseButton1Click:Connect(function()
 end)
 
 LaunchButton.MouseButton1Click:Connect(function()
-	if not isLaunching then startRocketSequence() end
+	if not isLaunching then
+		if chat then chat:SendAsync("/e dance2") end
+		startRocketSequence()
+	end
 end)
 
 -- 🚀 Launch Sequence
@@ -82,9 +85,6 @@ function startRocketSequence()
 	local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 	local root = character:WaitForChild("HumanoidRootPart")
 	local humanoid = character:WaitForChild("Humanoid")
-
-if chat then
-	chat:SendAsync("/e dance2")
 
 	isLaunching = true
 	humanoid.PlatformStand = true
@@ -147,9 +147,8 @@ if chat then
 			humanoid.PlatformStand = false
 			humanoid.AutoRotate = true
 			isLaunching = false
-		 end
-   end 
- end)
+		end
+	end)
 end
 
 -- 📈 Raised Listener with Delay
@@ -164,6 +163,7 @@ raisedStat.Changed:Connect(function()
 		if autoLaunchEnabled and not isLaunching then
 			task.delay(3, function()
 				if autoLaunchEnabled and not isLaunching then
+					if chat then chat:SendAsync("/e dance2") end
 					startRocketSequence()
 				end
 			end)
