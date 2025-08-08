@@ -85,7 +85,6 @@ function startRocketSequence()
 
 if chat then
 	chat:SendAsync("/e dance2")
-end
 
 	isLaunching = true
 	humanoid.PlatformStand = true
