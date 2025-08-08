@@ -147,8 +147,9 @@ if chat then
 			humanoid.PlatformStand = false
 			humanoid.AutoRotate = true
 			isLaunching = false
-		end
-	end)
+		 end
+   end 
+ end)
 end
 
 -- 📈 Raised Listener with Delay
