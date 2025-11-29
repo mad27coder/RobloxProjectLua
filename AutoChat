@@ -1,4 +1,4 @@
--- Pengaturan awal (ubah ke false agar tidak aktif saat mulai)
+-- Pengaturan awal
 getgenv().autoThank = false
 getgenv().promoSpam = false
 
@@ -11,69 +11,67 @@ local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGener
 
 -- Anti-AFK
 Players.LocalPlayer.Idled:Connect(function()
-	local vu = game:GetService("VirtualUser")
-	vu:CaptureController()
-	vu:ClickButton1(Vector2.new(0, 0))
+	VirtualUser:CaptureController()
+	VirtualUser:ClickButton1(Vector2.new(0, 0))
 end)
 
 -- GUI Setup
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = localPlayer:WaitForChild("PlayerGui")
+local ScreenGui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
 ScreenGui.Name = "AutoGUI"
 ScreenGui.ResetOnSpawn = false
 
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 220, 0, 130)
-Frame.Position = UDim2.new(0.5, -110, 0.5, -65)
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 220, 0, 160)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -80)
 Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.Active = true
 Frame.Draggable = true
-Frame.Parent = ScreenGui
 
--- Tombol Toggle GUI
-local toggleButton = Instance.new("TextButton")
+local toggleButton = Instance.new("TextButton", ScreenGui)
 toggleButton.Size = UDim2.new(0, 40, 0, 40)
 toggleButton.Position = UDim2.new(1, -45, 0.5, -20)
 toggleButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
 toggleButton.TextColor3 = Color3.new(1, 1, 1)
 toggleButton.Text = "≡"
-toggleButton.Parent = ScreenGui
 toggleButton.ZIndex = 10
 toggleButton.Active = true
 toggleButton.Draggable = true
 
--- Status visibilitas
 local guiVisible = true
-
 toggleButton.MouseButton1Click:Connect(function()
 	guiVisible = not guiVisible
 	Frame.Visible = guiVisible
 end)
 
--- Elemen GUI
-local ThankButton = Instance.new("TextButton")
+-- GUI Elements
+local ThankButton = Instance.new("TextButton", Frame)
 ThankButton.Size = UDim2.new(0, 200, 0, 40)
 ThankButton.Position = UDim2.new(0, 10, 0, 10)
 ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 ThankButton.TextColor3 = Color3.new(1, 1, 1)
-ThankButton.Parent = Frame
 
-local PromoButton = Instance.new("TextButton")
+local PromoButton = Instance.new("TextButton", Frame)
 PromoButton.Size = UDim2.new(0, 200, 0, 40)
 PromoButton.Position = UDim2.new(0, 10, 0, 60)
 PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 PromoButton.TextColor3 = Color3.new(1, 1, 1)
-PromoButton.Parent = Frame
 
-local StatusLabel = Instance.new("TextLabel")
+local StatusLabel = Instance.new("TextLabel", Frame)
 StatusLabel.Size = UDim2.new(0, 200, 0, 20)
 StatusLabel.Position = UDim2.new(0, 10, 0, 105)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.TextColor3 = Color3.new(1, 1, 1)
 StatusLabel.TextScaled = true
-StatusLabel.Parent = Frame
 
--- Update GUI text sesuai status awal
+local SignatureLabel = Instance.new("TextLabel", Frame)
+SignatureLabel.Size = UDim2.new(0, 200, 0, 20)
+SignatureLabel.Position = UDim2.new(0, 10, 1, -25)
+SignatureLabel.BackgroundTransparency = 1
+SignatureLabel.TextColor3 = Color3.new(1, 1, 1)
+SignatureLabel.Text = "LYNX x DHINZ"
+SignatureLabel.Font = Enum.Font.SourceSansBold
+SignatureLabel.TextScaled = true
+
 local function updateGUI()
 	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
 	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
@@ -84,241 +82,24 @@ updateGUI()
 
 -- Messages
 local thankMessages = {
-    "Wow, with that donation, my avatar just unlocked happiness!",
-    "That Robux felt warmer than a fresh baked pizza.",
-    "You just made my day 110% cooler — scientifically proven.",
-    "If generosity was a superpower, you'd be flying now.",
-    "My booth's self-esteem just hit the roof!",
-    "That donation? Straight from the kindness galaxy.",
-    "You donate like you’ve done this in your past life.",
-    "Even my imaginary pet smiled because of you.",
-    "You just added ‘awesome’ to my dictionary.",
-    "NASA just called, they saw your donation from space!",
-    "That Robux was delivered with pure sunshine.",
-    "The booth is now officially blessed. Thanks to you!",
-    "I’m convinced your heart runs on good vibes.",
-    "You just donated? My brain did a happy dance.",
-    "That donation felt like a hug from the universe.",
-    "Even my lag paused to appreciate your kindness.",
-    "You donate like it's your love language!",
-    "My booth has officially entered its glow-up era.",
-    "You just upgraded my happiness firmware.",
-    "That donation unlocked a smile achievement!",
-    "Plot twist: You're everyone's favorite player now.",
-    "You donated? Instant VIP access to my respect.",
-    "That Robux came with sparkles and kindness!",
-    "You just earned unlimited appreciation credits.",
-    "Even my keyboard typed 'WOW' by itself.",
-    "You donate like you're trying to break the kindness record!",
-    "That donation just made the sun shine brighter.",
-    "My booth’s now powered by your good vibes.",
-    "Who needs coffee when your donation woke me up like this?",
-    "You donate like a hero in pixel disguise.",
-    "The kindness radar is going wild — it's YOU!",
-    "You dropped Robux like you're dropping joy.",
-    "My booth is smiling… and it doesn’t even have a mouth.",
-    "You're the reason my avatar is doing backflips.",
-    "That donation just melted my laggy heart.",
-    "You just sprinkled glitter on my whole day.",
-    "If vibes could be measured, you'd break the scale.",
-    "That Robux felt like a five-star review on life.",
-    "You're the type of person NPCs talk about in legends.",
-    "I swear my booth just blinked and said ‘thanks.’",
-    "You donated? Someone give this legend a parade!",
-    "That donation sounded like angels humming.",
-    "Your generosity just rebooted my motivation system.",
-    "You're not just a player. You’re a player with *style*.",
-    "That Robux had 'blessing' written all over it.",
-    "If I had confetti, I’d throw it at the screen.",
-    "Your donation was smoother than a jazz solo.",
-    "You just made my booth emotionally stable.",
-    "That Robux landed with a sparkle effect. I saw it!",
-    "Even my FPS increased from your good vibes.",
-    "That donation made my day do a backflip.",
-    "You're so generous, even my alt account smiled.",
-    "That was a kindness critical hit!",
-    "You just turned my virtual tears into virtual joy.",
-    "I didn’t know Robux could feel like a warm hug.",
-    "You must be sponsored by kindness.",
-    "You donated? Now my booth is walking on sunshine.",
-    "That Robux? Straight outta the kindness factory.",
-    "Your donation upgraded my booth's mood to legendary.",
-    "Who needs potions? Your generosity is magic!",
-    "I think even Roblox HQ felt your positive energy.",
-    "You're the plot twist this booth needed.",
-    "That donation deserves its own theme music.",
-    "Even my shadows got brighter thanks to you.",
-    "You dropped Robux and picked up my happiness.",
-    "That generosity is now canon in my storyline.",
-    "You just gave my booth a personality upgrade.",
-    "If there was a kindness leaderboard, you’d top it.",
-    "Your donation is the new definition of wholesome.",
-    "You're so kind, my avatar almost cried. Almost.",
-    "I didn't see that coming... but my smile did.",
-    "That Robux gave me an emotional respawn.",
-    "Even the pixels clapped for that donation.",
-    "That donation made my booth say 'sheesh!'",
-    "You donate like kindness is in your inventory.",
-    "I thought I lagged, but it was just my joy buffering.",
-    "You dropped a donation bomb filled with joy!",
-    "That was not just Robux, it was happiness currency.",
-    "You just changed this booth’s destiny.",
-    "That donation had a rainbow trail behind it.",
-    "You're the kind of player that makes Roblox brighter.",
-    "You made my booth emotionally stronger.",
-    "Roblox servers just high-fived each other for that.",
-    "That donation felt like a power-up in real life.",
-    "Even my idle animation got excited.",
-    "You just donated? 10/10 for being awesome!",
-    "You turned this booth from ‘meh’ to ‘wow!’",
-    "I’m running on pure kindness now. Thanks to you!",
-    "You're so generous, I’m suspicious you’re from another realm.",
-    "You brought joy... and Robux. Both essential!",
-    "Even my Roblox hat tipped in your honor.",
-    "That Robux donation hit like a compliment storm.",
-    "You’re the spark this booth needed!",
-    "That donation turned my mood into a dance party.",
-    "I hope your kindness goes viral.",
-    "You dropped Robux and picked up everyone's mood.",
-    "The sun shines differently on donators like you.",
-    "You’re basically a walking good vibe.",
-    "That was more than a donation — it was a celebration.",
-    "If booths could smile, mine would need braces now.",
-    "That donation made my whole Roblox week.",
-    "Even my in-game pet winked. You’re that powerful.",
-    "That generosity could power a small city.",
-    "You just unlocked ‘Legend’ status in my story.",
-    "The booth glows. The vibes flow. You know the show.",
+	"Thank you so much! With that donation, my avatar can finally stop eating imaginary noodles. Ramen is great, but air ramen? Not so much.",
 }
 
 local promoMessages = {
-    "Only 1 Robux? That’s cheaper than oxygen.",
-    "Donating here improves your luck by 73%.",
-    "Support me now, brag later.",
-    "This sign is cooler if you donate.",
-    "Spare Robux? I recycle good karma.",
-    "Walking past without donating? Bold move.",
-    "Robux can't buy happiness, but it can help my booth.",
-    "Just testing if this sign works. Try donating.",
-    "Your avatar wants you to donate. I asked them.",
-    "This booth might disappear if underfunded.",
-    "Small donations, big smiles.",
-    "You scroll past? That's cold.",
-    "Be the reason my booth smiles today.",
-    "A donation a day keeps the boredom away.",
-    "Not a beggar, just creatively underfunded.",
-    "Proof you're cool: donate here.",
-    "I accept Robux, compliments, and high fives.",
-    "You looked at the sign. Step 2: donate.",
-    "Make my day in 1 Robux or less.",
-    "Booth powered by donations and sarcasm.",
-    "Your Robux called, they wanna live here.",
-    "Low on Robux? Me too. Let’s fix that.",
-    "Warning: ignoring this booth may cause guilt.",
-    "Your daily good deed is just one click away.",
-    "Donate here or risk 7 years bad ping.",
-    "Even your shadow donated. Be like your shadow.",
-    "I named this sign ‘hope’. Feed it.",
-    "Robux are temporary, memories of donating last forever.",
-    "If kindness was a game, you'd be winning.",
-    "Nice booth, right? Imagine it with your donation.",
-    "Step 1: read sign. Step 2: donate. Step 3: smile.",
-    "Don’t let this booth cry tonight.",
-    "Caution: Donating may cause happiness.",
-    "I'm not rich, but my hopes are.",
-    "Fuel this booth with Robux energy.",
-    "Bored? Try donating, it’s fun.",
-    "This booth has dreams. Help fund them.",
-    "Even 1 Robux means I win today.",
-    "Donate now, flex later.",
-    "Blink once if you'll donate.",
-    "This booth accepts good vibes and Robux.",
-    "Want instant karma? It starts here.",
-    "This is a guilt-free donation zone.",
-    "Scroll guilt-free by donating first.",
-    "I’m one donation away from smiling.",
-    "No pressure... just eternal regret if you skip.",
-    "Rumor has it, donators get 2x cooler.",
-    "Don’t scroll in silence. Tap that donate.",
-    "Made with hope, running on donations.",
-    "Your scroll finger could make history.",
-    "Donate now, screenshot later.",
-    "No tricks, just treats for Robux.",
-    "This sign is 99% charm, 1% desperation.",
-    "This booth only eats Robux. Feed it.",
-    "Yes, this is your sign to donate.",
-    "Join the cool squad. Donate now.",
-    "Why donate? Why not?",
-    "If you smiled reading this, now donate.",
-    "Happiness for sale. Starts at 1 Robux.",
-    "This booth judges you silently. Unless you donate.",
-    "Buy now, regret never.",
-    "This booth is 100% more fun after donations.",
-    "Nice people donate. Just saying.",
-    "Look left, look right. Now look generous.",
-    "I dreamt someone donated. Was it you?",
-    "Donate before the cat on my shirt gets sad.",
-    "Make this sign stop begging. Donate.",
-    "It’s not just a booth. It’s a lifestyle.",
-    "Cute booth + your Robux = perfection.",
-    "Don’t think. Just donate.",
-    "Robux is temporary. Donation clout is forever.",
-    "1 Robux = 1 smile unlocked.",
-    "Donate like nobody’s watching. (But I am)",
-    "This booth glows brighter with donations.",
-    "You found the secret booth. Now donate.",
-    "Your click might save this booth’s career.",
-    "Let’s pretend this is charity.",
-    "Even 1 Robux makes me do a happy dance.",
-    "Donating here grants +10 good karma.",
-    "This is the booth your Robux were meant for.",
-    "Help me fund my bad decisions.",
-    "Keep scrolling? Heartless. Donate? Hero.",
-    "Donate and I won’t tell anyone about your avatar.",
-    "Low budget, high hopes.",
-    "Clicking ‘donate’ is 100% risk-free.",
-    "Save me from this booth job. Donate.",
-    "Powered by dreams and maybe your Robux.",
-    "The sign’s cute, imagine the donator.",
-    "Just 1 Robux can make a difference… to me.",
-    "One small click for you, one big smile for me.",
-    "No lies detected: This booth needs you.",
-    "If this booth had feelings, it would cry right now.",
-    "Be the plot twist in my poor story.",
-    "This booth is like a puppy. Needs care.",
-    "Robux today, laughter forever.",
-    "Legend says every donator gets 7% luckier.",
-    "Booth's alive. It hungers for Robux.",
-    "Pause scrolling. Start donating.",
-    "One click could end booth hunger.",
-    "This booth wants to be rich when it grows up.",
-    "Swipe up doesn’t work here. Try donating.",
-    "No cap, this booth could use your drip (Robux).",
+	"Support the cause! Every bit helps. 💖",
+	"Join the movement! Your donation makes a difference.",
+	"Thanks for being awesome! Keep the support coming!",
 }
 
--- Index trackers
-local thankIndex = 1
-local promoIndex = 1
+-- Promo Delay System
+local promoDelayUntil = 0
+local promoPauseOnDonation = 36
 
--- Auto Thank Logic (berurutan)
-local leaderstats = localPlayer:WaitForChild("leaderstats")
-local raisedStat = leaderstats:WaitForChild("Raised")
-local lastRaised = raisedStat.Value
+local function getRandomPromoInterval()
+	return math.random(15, 20)
+end
 
-raisedStat.Changed:Connect(function()
-	if getgenv().autoThank then
-		local newRaised = raisedStat.Value
-		if newRaised > lastRaised then
-			if chat then
-				local msg = thankMessages[math.random(1, #thankMessages)]
-				chat:SendAsync(msg)
-			end
-			lastRaised = newRaised
-		end
-	end
-end)
-
--- Auto Promo Logic (berurutan tiap 27 detik)
+-- Shuffle function
 local function shuffle(array)
 	local shuffled = {}
 	local indices = {}
@@ -336,21 +117,46 @@ end
 local shuffledPromo = shuffle(promoMessages)
 local shuffledIndex = 1
 
+-- Auto Promo Logic
 task.spawn(function()
 	while true do
 		if getgenv().promoSpam then
-			if chat then
-				local msg = shuffledPromo[shuffledIndex]
-				chat:SendAsync(msg)
-				shuffledIndex += 1
-				if shuffledIndex > #shuffledPromo then
-					shuffledPromo = shuffle(promoMessages)
-					shuffledIndex = 1
+			local currentTime = tick()
+			if currentTime >= promoDelayUntil then
+				if chat then
+					local msg = shuffledPromo[shuffledIndex]
+					chat:SendAsync(msg)
+					shuffledIndex += 1
+					if shuffledIndex > #shuffledPromo then
+						shuffledPromo = shuffle(promoMessages)
+						shuffledIndex = 1
+					end
 				end
+				promoDelayUntil = currentTime + getRandomPromoInterval()
 			end
 		end
-		task.wait(27)
+		task.wait(1)
 	end
+end)
+
+-- Auto Thank Logic + Promo Pause Trigger
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local raisedStat = leaderstats:WaitForChild("Raised")
+local lastRaised = raisedStat.Value
+
+raisedStat.Changed:Connect(function()
+	if getgenv().autoThank then
+		local newRaised = raisedStat.Value
+		if newRaised > lastRaised then
+			if chat then
+				local msg = thankMessages[math.random(1, #thankMessages)]
+				chat:SendAsync(msg)
+			end
+			lastRaised = newRaised
+		end
+	end
+	-- Pause promo for 36 seconds
+	promoDelayUntil = tick() + promoPauseOnDonation
 end)
 
 -- Button Logic
