@@ -571,7 +571,7 @@ local promoDelayUntil = 0
 local promoPauseOnDonation = 36
 
 local function getRandomPromoInterval()
-	return math.random(15, 20)
+	return math.random(8, 13)
 end
 
 -- Shuffle function
