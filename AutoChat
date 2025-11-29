@@ -1,4 +1,4 @@
--- Pengaturan awal
+-- Pengaturan awal (ubah ke false agar tidak aktif saat mulai)
 getgenv().autoThank = false
 getgenv().promoSpam = false
 
@@ -11,67 +11,69 @@ local chat = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGener
 
 -- Anti-AFK
 Players.LocalPlayer.Idled:Connect(function()
-	VirtualUser:CaptureController()
-	VirtualUser:ClickButton1(Vector2.new(0, 0))
+	local vu = game:GetService("VirtualUser")
+	vu:CaptureController()
+	vu:ClickButton1(Vector2.new(0, 0))
 end)
 
 -- GUI Setup
-local ScreenGui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = localPlayer:WaitForChild("PlayerGui")
 ScreenGui.Name = "AutoGUI"
 ScreenGui.ResetOnSpawn = false
 
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 220, 0, 160)
-Frame.Position = UDim2.new(0.5, -110, 0.5, -80)
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 220, 0, 130)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -65)
 Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Frame.Active = true
 Frame.Draggable = true
+Frame.Parent = ScreenGui
 
-local toggleButton = Instance.new("TextButton", ScreenGui)
+-- Tombol Toggle GUI
+local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 40, 0, 40)
 toggleButton.Position = UDim2.new(1, -45, 0.5, -20)
 toggleButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
 toggleButton.TextColor3 = Color3.new(1, 1, 1)
 toggleButton.Text = "≡"
+toggleButton.Parent = ScreenGui
 toggleButton.ZIndex = 10
 toggleButton.Active = true
 toggleButton.Draggable = true
 
+-- Status visibilitas
 local guiVisible = true
+
 toggleButton.MouseButton1Click:Connect(function()
 	guiVisible = not guiVisible
 	Frame.Visible = guiVisible
 end)
 
--- GUI Elements
-local ThankButton = Instance.new("TextButton", Frame)
+-- Elemen GUI
+local ThankButton = Instance.new("TextButton")
 ThankButton.Size = UDim2.new(0, 200, 0, 40)
 ThankButton.Position = UDim2.new(0, 10, 0, 10)
 ThankButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 ThankButton.TextColor3 = Color3.new(1, 1, 1)
+ThankButton.Parent = Frame
 
-local PromoButton = Instance.new("TextButton", Frame)
+local PromoButton = Instance.new("TextButton")
 PromoButton.Size = UDim2.new(0, 200, 0, 40)
 PromoButton.Position = UDim2.new(0, 10, 0, 60)
 PromoButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 PromoButton.TextColor3 = Color3.new(1, 1, 1)
+PromoButton.Parent = Frame
 
-local StatusLabel = Instance.new("TextLabel", Frame)
+local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Size = UDim2.new(0, 200, 0, 20)
 StatusLabel.Position = UDim2.new(0, 10, 0, 105)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.TextColor3 = Color3.new(1, 1, 1)
 StatusLabel.TextScaled = true
+StatusLabel.Parent = Frame
 
-local SignatureLabel = Instance.new("TextLabel", Frame)
-SignatureLabel.Size = UDim2.new(0, 200, 0, 20)
-SignatureLabel.Position = UDim2.new(0, 10, 1, -25)
-SignatureLabel.BackgroundTransparency = 1
-SignatureLabel.TextColor3 = Color3.new(1, 1, 1)
-SignatureLabel.Text = "LYNX x DHINZ"
-SignatureLabel.Font = Enum.Font.SourceSansBold
-SignatureLabel.TextScaled = true
-
+-- Update GUI text sesuai status awal
 local function updateGUI()
 	ThankButton.Text = "Toggle Auto Thank (" .. (getgenv().autoThank and "ON" or "OFF") .. ")"
 	PromoButton.Text = "Toggle Auto Promo (" .. (getgenv().promoSpam and "ON" or "OFF") .. ")"
@@ -82,507 +84,241 @@ updateGUI()
 
 -- Messages
 local thankMessages = {
-    "Thank you for the donation!",
-    "Thanks for the Robux!",
-    "Appreciate the support!",
-    "Donation received, thank you!",
-    "Got the funds, thanks!",
-    "You are a true supporter!",
-    "Your gift is awesome!",
-    "This donation helps a lot!",
-    "Much appreciated for the funds!",
-    "Thank you for the contribution!",
-    "So generous of you!",
-    "Thanks for the money!",
-    "Big thanks for the donation!",
-    "Your Robux is highly valued!",
-    "I appreciate your donation!",
-    "Thank you for giving!",
-    "Received, thanks a million!",
-    "You helped me reach my goal!",
-    "Every cent counts, thank you!",
-    "Your support is incredible!",
-    "Thanks for the kindness!",
-    "So happy for this gift!",
-    "Donating is very kind!",
-    "Thanks for the financial help!",
-    "You are a great supporter!",
-    "Thank you, truly helpful!",
-    "We appreciate your donation!",
-    "This means the world, thanks!",
-    "You made a difference today!",
-    "Thanks for the funds received!",
-    "Got the Robux, thank you!",
-    "Your donation is secure, thanks!",
-    "Awesome contribution!",
-    "Thanks for the wonderful support!",
-    "You are a lifesaver with this donation!",
-    "I'm grateful for your funds!",
-    "Thank you for your generosity!",
-    "Best donation ever, thanks!",
-    "Your Robux is safe with me!",
-    "Thank you for the donation!",
-    "So much respect for your giving!",
-    "This is exactly what I needed, thanks!",
-    "You are too kind with this donation!",
-    "Thanks for helping me out!",
-    "Your financial support is amazing!",
-    "I feel blessed by your donation!",
-    "Thank you for making it possible!",
-    "This donation is fantastic!",
-    "Big support received, thanks!",
-    "You're a legend for this donation!",
-    "Funds secured! Thank you!",
-    "Donation is powerful, thanks!",
-    "Thank you for the support!",
-    "I'm thankful for this Robux!",
-    "You are an amazing contributor!",
-    "Thanks for your valuable fund!",
-    "Your kindness helps my goal!",
-    "This Robux is appreciated!",
-    "Thank you for the currency!",
-    "Big thanks for your support!",
-    "Donation is complete, thanks!",
-    "You are so kind to donate!",
-    "I got the Robux! Thank you!",
-    "Thanks for your kind gift!",
-    "This helps my objective!",
-    "Appreciate the Robux so much!",
-    "Thank you for the contribution!",
-    "Your donation matters!",
-    "Thanks for being a supporter!",
-    "A huge thank you for the funds!",
-    "Your help is important, thanks!",
-    "Thank you for your effort!",
-    "This Robux made my day!",
-    "Thanks for your funding!",
-    "You are the best supporter!",
-    "Received your donation, thank you!",
-    "I'm grateful for this gift!",
-    "Thanks for the amount!",
-    "This donation is very useful!",
-    "You supported me, thanks!",
-    "Thank you for the generous Robux!",
-    "I appreciate your kind funds!",
-    "Thanks for the financial aid!",
-    "Your donation is wonderful!",
-    "Big thanks for your support!",
-    "Thank you for the money given!",
-    "Got the donation, you're awesome!",
-    "This Robux is truly valued!",
-    "Thanks for the donation, friend!",
-    "You are truly appreciated!",
-    "Thank you for the quick funds!",
-    "I acknowledge your support, thanks!",
-    "Your donation is a success, thanks!",
-    "Thanks for the funds received!",
-    "You've helped a ton, thank you!",
-    "I appreciate your valuable Robux!",
-    "Thank you for your strong support!",
-    "Your kindness is noted, thanks!",
-    "Big thanks for this wonderful gift!",
-    "I am thankful for your donation!",
-    "Thanks for the good money!",
-    "Your Robux made a difference!",
-    "Thank you for the kind support!",
-    "This donation is awesome!",
-    "You helped me forward, thanks!",
-    "I'm happy for your contribution!",
-    "Thanks for the generous fund!",
-    "Your support is perfect, thank you!",
-    "Big respect for the donation!",
-    "Thank you for the funds and Robux!",
-    "I'm grateful for your kindness!",
-    "Thanks for the incredible help!",
-    "Your donation is super appreciated!",
-    "You are the champion contributor!",
-    "Thank you for making my goal real!",
-    "I value your financial support!",
-    "Thanks for the great Robux!",
-    "Your gift is perfect, thank you!",
-    "This fund helps me a lot!",
-    "Thank you for this support!",
-    "I got your kind donation, thanks!",
-    "Thanks for the Robux given!",
-    "You supported my project, thanks!",
-    "This is a big help, thank you!",
-    "I appreciate your support!",
-    "Thanks for the money, you're cool!",
-    "Your donation is very strong!",
-    "Thank you for the donation received!",
-    "I'm thankful for this Robux amount!",
-    "Thanks for the kindness shown!",
-    "Your support means so much!",
-    "Thank you, helpful supporter!",
-    "I appreciate this awesome fund!",
-    "Thanks for your generous support!",
-    "This Robux is wonderful, thank you!",
-    "You are fantastic for donating!",
-    "Thank you for the needed funds!",
-    "I'm glad for your contribution!",
-    "Thanks for the huge help!",
-    "Your donation is the best!",
-    "Thank you, true supporter!",
-    "I appreciate your Robux gift!",
-    "Thanks for the kindness and funds!",
-    "Your support is noted, thank you!",
-    "This Robux is a success, thanks!",
-    "You made a great donation!",
-    "Thank you for being generous!",
-    "I'm grateful for the money!",
-    "Thanks for the support, friend!",
-    "Your donation is important!",
-    "Thank you for the valuable Robux!",
-    "I appreciate your help a lot!",
-    "Thanks for the donation, amazing!",
-    "Your support is fantastic, thank you!",
-    "This Robux is perfect for my goal!",
-    "Thank you for the funds, great!",
-    "I received your donation, thanks!",
-    "Thanks for the support provided!",
-    "Your gift is very kind, thank you!",
-    "This donation is a massive help!",
-    "Thank you for your awesome funds!",
-    "I appreciate your strong Robux!",
-    "Thanks for the money and kindness!",
-    "Your support is valuable, thank you!",
-    "This Robux helps immensely, thanks!",
-    "Thank you for your generous gift!",
-    "I'm grateful for your effort!",
-    "Thanks for the quick donation!",
-    "Your donation is a blessing, thank you!",
-    "This is great Robux, thank you!",
-    "Thank you for the fund amount!",
-    "I appreciate your kind gesture!",
-    "Thanks for the support and Robux!",
-    "Your donation is appreciated much!",
-    "Thank you, wonderful supporter!",
-    "I'm so thankful for your funds!",
-    "Thanks for the money today!",
-    "Your Robux is fantastic, thank you!",
-    "This helps tremendously, thanks!",
-    "Thank you for your great support!",
-    "I appreciate your helpful donation!",
-    "Thanks for the kind Robux!",
-    "Your donation is a big success!",
-    "Thank you for this valuable gift!",
-    "I'm grateful for your financial aid!",
-    "Thanks for the support, truly!",
-    "Your Robux is truly valued, thank you!",
-    "This donation is very helpful!",
-    "Thank you for your kind fund!",
-    "I appreciate your incredible Robux!",
-    "Thanks for the wonderful money!",
-    "Your support is awesome, thank you!",
-    "This Robux is appreciated greatly!",
-    "Thank you for the great donation!",
-    "I'm thankful for your generous Robux!",
-    "Thanks for the support, amazing!",
-    "Your donation is strong, thank you!",
-    "This helps my objective, thanks!",
-    "Thank you for your financial gift!",
-    "I appreciate your kind contribution!",
-    "Thanks for the fund, you're a star!",
-    "Your Robux is the best, thank you!",
-    "This donation is a lifesaver, thanks!",
-    "Thank you for your awesome support!",
-    "I'm grateful for your Robux funds!",
-    "Thanks for the money received!",
-    "Your kindness is awesome, thank you!",
-    "This donation is great, thanks!",
-    "Thank you for the money and love!",
-    "I appreciate your help, thank you!",
-    "Thanks for the donation, very kind!",
-    "Your support is important, thank you!",
-    "This Robux is a big help, thanks!",
-    "Thank you for the money today!",
-    "I'm grateful for the funds!",
-    "Thanks for the support, fantastic!",
-    "Your donation is valued, thank you!",
-    "This Robux is a success!",
-    "Thank you for your contribution!",
-    "I appreciate your funds!",
-    "Thanks for the donation, awesome!",
-    "Your support is kind, thank you!",
-    "This Robux is great, thanks!",
-    "Thank you for the money!",
+    "Wow, with that donation, my avatar just unlocked happiness!",
+    "That Robux felt warmer than a fresh baked pizza.",
+    "You just made my day 110% cooler — scientifically proven.",
+    "If generosity was a superpower, you'd be flying now.",
+    "My booth's self-esteem just hit the roof!",
+    "That donation? Straight from the kindness galaxy.",
+    "You donate like you’ve done this in your past life.",
+    "Even my imaginary pet smiled because of you.",
+    "You just added ‘awesome’ to my dictionary.",
+    "NASA just called, they saw your donation from space!",
+    "That Robux was delivered with pure sunshine.",
+    "The booth is now officially blessed. Thanks to you!",
+    "I’m convinced your heart runs on good vibes.",
+    "You just donated? My brain did a happy dance.",
+    "That donation felt like a hug from the universe.",
+    "Even my lag paused to appreciate your kindness.",
+    "You donate like it's your love language!",
+    "My booth has officially entered its glow-up era.",
+    "You just upgraded my happiness firmware.",
+    "That donation unlocked a smile achievement!",
+    "Plot twist: You're everyone's favorite player now.",
+    "You donated? Instant VIP access to my respect.",
+    "That Robux came with sparkles and kindness!",
+    "You just earned unlimited appreciation credits.",
+    "Even my keyboard typed 'WOW' by itself.",
+    "You donate like you're trying to break the kindness record!",
+    "That donation just made the sun shine brighter.",
+    "My booth’s now powered by your good vibes.",
+    "Who needs coffee when your donation woke me up like this?",
+    "You donate like a hero in pixel disguise.",
+    "The kindness radar is going wild — it's YOU!",
+    "You dropped Robux like you're dropping joy.",
+    "My booth is smiling… and it doesn’t even have a mouth.",
+    "You're the reason my avatar is doing backflips.",
+    "That donation just melted my laggy heart.",
+    "You just sprinkled glitter on my whole day.",
+    "If vibes could be measured, you'd break the scale.",
+    "That Robux felt like a five-star review on life.",
+    "You're the type of person NPCs talk about in legends.",
+    "I swear my booth just blinked and said ‘thanks.’",
+    "You donated? Someone give this legend a parade!",
+    "That donation sounded like angels humming.",
+    "Your generosity just rebooted my motivation system.",
+    "You're not just a player. You’re a player with *style*.",
+    "That Robux had 'blessing' written all over it.",
+    "If I had confetti, I’d throw it at the screen.",
+    "Your donation was smoother than a jazz solo.",
+    "You just made my booth emotionally stable.",
+    "That Robux landed with a sparkle effect. I saw it!",
+    "Even my FPS increased from your good vibes.",
+    "That donation made my day do a backflip.",
+    "You're so generous, even my alt account smiled.",
+    "That was a kindness critical hit!",
+    "You just turned my virtual tears into virtual joy.",
+    "I didn’t know Robux could feel like a warm hug.",
+    "You must be sponsored by kindness.",
+    "You donated? Now my booth is walking on sunshine.",
+    "That Robux? Straight outta the kindness factory.",
+    "Your donation upgraded my booth's mood to legendary.",
+    "Who needs potions? Your generosity is magic!",
+    "I think even Roblox HQ felt your positive energy.",
+    "You're the plot twist this booth needed.",
+    "That donation deserves its own theme music.",
+    "Even my shadows got brighter thanks to you.",
+    "You dropped Robux and picked up my happiness.",
+    "That generosity is now canon in my storyline.",
+    "You just gave my booth a personality upgrade.",
+    "If there was a kindness leaderboard, you’d top it.",
+    "Your donation is the new definition of wholesome.",
+    "You're so kind, my avatar almost cried. Almost.",
+    "I didn't see that coming... but my smile did.",
+    "That Robux gave me an emotional respawn.",
+    "Even the pixels clapped for that donation.",
+    "That donation made my booth say 'sheesh!'",
+    "You donate like kindness is in your inventory.",
+    "I thought I lagged, but it was just my joy buffering.",
+    "You dropped a donation bomb filled with joy!",
+    "That was not just Robux, it was happiness currency.",
+    "You just changed this booth’s destiny.",
+    "That donation had a rainbow trail behind it.",
+    "You're the kind of player that makes Roblox brighter.",
+    "You made my booth emotionally stronger.",
+    "Roblox servers just high-fived each other for that.",
+    "That donation felt like a power-up in real life.",
+    "Even my idle animation got excited.",
+    "You just donated? 10/10 for being awesome!",
+    "You turned this booth from ‘meh’ to ‘wow!’",
+    "I’m running on pure kindness now. Thanks to you!",
+    "You're so generous, I’m suspicious you’re from another realm.",
+    "You brought joy... and Robux. Both essential!",
+    "Even my Roblox hat tipped in your honor.",
+    "That Robux donation hit like a compliment storm.",
+    "You’re the spark this booth needed!",
+    "That donation turned my mood into a dance party.",
+    "I hope your kindness goes viral.",
+    "You dropped Robux and picked up everyone's mood.",
+    "The sun shines differently on donators like you.",
+    "You’re basically a walking good vibe.",
+    "That was more than a donation — it was a celebration.",
+    "If booths could smile, mine would need braces now.",
+    "That donation made my whole Roblox week.",
+    "Even my in-game pet winked. You’re that powerful.",
+    "That generosity could power a small city.",
+    "You just unlocked ‘Legend’ status in my story.",
+    "The booth glows. The vibes flow. You know the show.",
 }
 
---promosi
 local promoMessages = {
-    -- Blok 1 (50 Kalimat)
-    "🤖: Make my dream come true! Donate R$!",
-    "🤖: You can change my game! Donate now!",
-    "🤖: Your donation makes me smile!",
-    "🤖: Be the hero! Send a donation!",
-    "🤖: Let's make history! Donate now!",
-    "🤖: Your Robux is my power-up!",
-    "🤖: Help me achieve something great, donate!",
-    "🤖: I need your help! Any R$ will do!",
-    "🤖: Invest in my goal! Donate today!",
-    "🤖: Your kindness is needed! Donate!",
-    "🤖: Show your support! Drop R$ now!",
-    "🤖: Be the reason for my next level! Donate!",
-    "🤖: Don't wait! Your R$ can help now!",
-    "🤖: Every donation is a blessing!",
-    "🤖: I would be very grateful for R$!",
-    "🤖: Help me out, just a small donation!",
-    "🤖: Make today the day you donate!",
-    "🤖: Your Robux is more than just money!",
-    "🤖: Need a push? Donate and see the magic!",
-    "🤖: Be part of the success! Donate!",
-    "🤖: Donating feels good! Try it!",
-    "🤖: Your financial support is key!",
-    "🤖: Help me keep the dream alive! Donate!",
-    "🤖: A small donation, a big impact!",
-    "🤖: You hold the key! Donate R$!",
-    "🤖: Please donate and save the day!",
-    "🤖: Your funds are crucial now!",
-    "🤖: I'm counting on your support! Donate!",
-    "🤖: Need a hand! Donate R$!",
-    "🤖: Your donation is my motivation!",
-    "🤖: Be legendary! Drop your Robux!",
-    "🤖: I appreciate you thinking about donating!",
-    "🤖: Your help means the world, donate!",
-    "🤖: Let's do this together! Donate!",
-    "🤖: Need your generosity! Send R$!",
-    "🤖: Be a pal and donate now!",
-    "🤖: Just click and give your support!",
-    "🤖: Your donation is a sign of friendship!",
-    "🤖: Help me smash this goal!",
-    "🤖: Be the change I need! Donate!",
-    "🤖: Support me with Robux today!",
-    "🤖: Your funds open new doors!",
-    "🤖: I'm super thankful for any donation!",
-    "🤖: Make me happy! Donate R$ now!",
-    "🤖: Your support is vital for progress!",
-    "🤖: Need that Robux boost! Donate!",
-    "🤖: Every contribution is appreciated!",
-    "🤖: Help me make this game better! Donate!",
-    "🤖: Be the MVP! Donate your Robux!",
-    "🤖: I really need your donation right now!",
-
-    -- Blok 2 (50 Kalimat)
-    "🤖: Make my dream come true! Donate R$!",
-    "🤖: You can change my game! Donate now!",
-    "🤖: Your donation makes me smile!",
-    "🤖: Be the hero! Send a donation!",
-    "🤖: Let's make history! Donate now!",
-    "🤖: Your Robux is my power-up!",
-    "🤖: Help me achieve something great, donate!",
-    "🤖: I need your help! Any R$ will do!",
-    "🤖: Invest in my goal! Donate today!",
-    "🤖: Your kindness is needed! Donate!",
-    "🤖: Show your support! Drop R$ now!",
-    "🤖: Be the reason for my next level! Donate!",
-    "🤖: Don't wait! Your R$ can help now!",
-    "🤖: Every donation is a blessing!",
-    "🤖: I would be very grateful for R$!",
-    "🤖: Help me out, just a small donation!",
-    "🤖: Make today the day you donate!",
-    "🤖: Your Robux is more than just money!",
-    "🤖: Need a push? Donate and see the magic!",
-    "🤖: Be part of the success! Donate!",
-    "🤖: Donating feels good! Try it!",
-    "🤖: Your financial support is key!",
-    "🤖: Help me keep the dream alive! Donate!",
-    "🤖: A small donation, a big impact!",
-    "🤖: You hold the key! Donate R$!",
-    "🤖: Please donate and save the day!",
-    "🤖: Your funds are crucial now!",
-    "🤖: I'm counting on your support! Donate!",
-    "🤖: Need a hand! Donate R$!",
-    "🤖: Your donation is my motivation!",
-    "🤖: Be legendary! Drop your Robux!",
-    "🤖: I appreciate you thinking about donating!",
-    "🤖: Your help means the world, donate!",
-    "🤖: Let's do this together! Donate!",
-    "🤖: Need your generosity! Send R$!",
-    "🤖: Be a pal and donate now!",
-    "🤖: Just click and give your support!",
-    "🤖: Your donation is a sign of friendship!",
-    "🤖: Help me smash this goal!",
-    "🤖: Be the change I need! Donate!",
-    "🤖: Support me with Robux today!",
-    "🤖: Your funds open new doors!",
-    "🤖: I'm super thankful for any donation!",
-    "🤖: Make me happy! Donate R$ now!",
-    "🤖: Your support is vital for progress!",
-    "🤖: Need that Robux boost! Donate!",
-    "🤖: Every contribution is appreciated!",
-    "🤖: Help me make this game better! Donate!",
-    "🤖: Be the MVP! Donate your Robux!",
-    "🤖: I really need your donation right now!",
-
-    -- Blok 3 (50 Kalimat)
-    "🤖: Make my dream come true! Donate R$!",
-    "🤖: You can change my game! Donate now!",
-    "🤖: Your donation makes me smile!",
-    "🤖: Be the hero! Send a donation!",
-    "🤖: Let's make history! Donate now!",
-    "🤖: Your Robux is my power-up!",
-    "🤖: Help me achieve something great, donate!",
-    "🤖: I need your help! Any R$ will do!",
-    "🤖: Invest in my goal! Donate today!",
-    "🤖: Your kindness is needed! Donate!",
-    "🤖: Show your support! Drop R$ now!",
-    "🤖: Be the reason for my next level! Donate!",
-    "🤖: Don't wait! Your R$ can help now!",
-    "🤖: Every donation is a blessing!",
-    "🤖: I would be very grateful for R$!",
-    "🤖: Help me out, just a small donation!",
-    "🤖: Make today the day you donate!",
-    "🤖: Your Robux is more than just money!",
-    "🤖: Need a push? Donate and see the magic!",
-    "🤖: Be part of the success! Donate!",
-    "🤖: Donating feels good! Try it!",
-    "🤖: Your financial support is key!",
-    "🤖: Help me keep the dream alive! Donate!",
-    "🤖: A small donation, a big impact!",
-    "🤖: You hold the key! Donate R$!",
-    "🤖: Please donate and save the day!",
-    "🤖: Your funds are crucial now!",
-    "🤖: I'm counting on your support! Donate!",
-    "🤖: Need a hand! Donate R$!",
-    "🤖: Your donation is my motivation!",
-    "🤖: Be legendary! Drop your Robux!",
-    "🤖: I appreciate you thinking about donating!",
-    "🤖: Your help means the world, donate!",
-    "🤖: Let's do this together! Donate!",
-    "🤖: Need your generosity! Send R$!",
-    "🤖: Be a pal and donate now!",
-    "🤖: Just click and give your support!",
-    "🤖: Your donation is a sign of friendship!",
-    "🤖: Help me smash this goal!",
-    "🤖: Be the change I need! Donate!",
-    "🤖: Support me with Robux today!",
-    "🤖: Your funds open new doors!",
-    "🤖: I'm super thankful for any donation!",
-    "🤖: Make me happy! Donate R$ now!",
-    "🤖: Your support is vital for progress!",
-    "🤖: Need that Robux boost! Donate!",
-    "🤖: Every contribution is appreciated!",
-    "🤖: Help me make this game better! Donate!",
-    "🤖: Be the MVP! Donate your Robux!",
-    "🤖: I really need your donation right now!",
-
-    -- Blok 4 (50 Kalimat)
-    "🤖: Make my dream come true! Donate R$!",
-    "🤖: You can change my game! Donate now!",
-    "🤖: Your donation makes me smile!",
-    "🤖: Be the hero! Send a donation!",
-    "🤖: Let's make history! Donate now!",
-    "🤖: Your Robux is my power-up!",
-    "🤖: Help me achieve something great, donate!",
-    "🤖: I need your help! Any R$ will do!",
-    "🤖: Invest in my goal! Donate today!",
-    "🤖: Your kindness is needed! Donate!",
-    "🤖: Show your support! Drop R$ now!",
-    "🤖: Be the reason for my next level! Donate!",
-    "🤖: Don't wait! Your R$ can help now!",
-    "🤖: Every donation is a blessing!",
-    "🤖: I would be very grateful for R$!",
-    "🤖: Help me out, just a small donation!",
-    "🤖: Make today the day you donate!",
-    "🤖: Your Robux is more than just money!",
-    "🤖: Need a push? Donate and see the magic!",
-    "🤖: Be part of the success! Donate!",
-    "🤖: Donating feels good! Try it!",
-    "🤖: Your financial support is key!",
-    "🤖: Help me keep the dream alive! Donate!",
-    "🤖: A small donation, a big impact!",
-    "🤖: You hold the key! Donate R$!",
-    "🤖: Please donate and save the day!",
-    "🤖: Your funds are crucial now!",
-    "🤖: I'm counting on your support! Donate!",
-    "🤖: Need a hand! Donate R$!",
-    "🤖: Your donation is my motivation!",
-    "🤖: Be legendary! Drop your Robux!",
-    "🤖: I appreciate you thinking about donating!",
-    "🤖: Your help means the world, donate!",
-    "🤖: Let's do this together! Donate!",
-    "🤖: Need your generosity! Send R$!",
-    "🤖: Be a pal and donate now!",
-    "🤖: Just click and give your support!",
-    "🤖: Your donation is a sign of friendship!",
-    "🤖: Help me smash this goal!",
-    "🤖: Be the change I need! Donate!",
-    "🤖: Support me with Robux today!",
-    "🤖: Your funds open new doors!",
-    "🤖: I'm super thankful for any donation!",
-    "🤖: Make me happy! Donate R$ now!",
-    "🤖: Your support is vital for progress!",
-    "🤖: Need that Robux boost! Donate!",
-    "🤖: Every contribution is appreciated!",
-    "🤖: Help me make this game better! Donate!",
-    "🤖: Be the MVP! Donate your Robux!",
-    "🤖: I really need your donation right now!",
-    
-    -- Blok 5 (50 Kalimat)
-    "🤖: Make my dream come true! Donate R$!",
-    "🤖: You can change my game! Donate now!",
-    "🤖: Your donation makes me smile!",
-    "🤖: Be the hero! Send a donation!",
-    "🤖: Let's make history! Donate now!",
-    "🤖: Your Robux is my power-up!",
-    "🤖: Help me achieve something great, donate!",
-    "🤖: I need your help! Any R$ will do!",
-    "🤖: Invest in my goal! Donate today!",
-    "🤖: Your kindness is needed! Donate!",
-    "🤖: Show your support! Drop R$ now!",
-    "🤖: Be the reason for my next level! Donate!",
-    "🤖: Don't wait! Your R$ can help now!",
-    "🤖: Every donation is a blessing!",
-    "🤖: I would be very grateful for R$!",
-    "🤖: Help me out, just a small donation!",
-    "🤖: Make today the day you donate!",
-    "🤖: Your Robux is more than just money!",
-    "🤖: Need a push? Donate and see the magic!",
-    "🤖: Be part of the success! Donate!",
-    "🤖: Donating feels good! Try it!",
-    "🤖: Your financial support is key!",
-    "🤖: Help me keep the dream alive! Donate!",
-    "🤖: A small donation, a big impact!",
-    "🤖: You hold the key! Donate R$!",
-    "🤖: Please donate and save the day!",
-    "🤖: Your funds are crucial now!",
-    "🤖: I'm counting on your support! Donate!",
-    "🤖: Need a hand! Donate R$!",
-    "🤖: Your donation is my motivation!",
-    "🤖: Be legendary! Drop your Robux!",
-    "🤖: I appreciate you thinking about donating!",
-    "🤖: Your help means the world, donate!",
-    "🤖: Let's do this together! Donate!",
-    "🤖: Need your generosity! Send R$!",
-    "🤖: Be a pal and donate now!",
-    "🤖: Just click and give your support!",
-    "🤖: Your donation is a sign of friendship!",
-    "🤖: Help me smash this goal!",
-    "🤖: Be the change I need! Donate!",
-    "🤖: Support me with Robux today!",
-    "🤖: Your funds open new doors!",
-    "🤖: I'm super thankful for any donation!",
-    "🤖: Make me happy! Donate R$ now!",
-    "🤖: Your support is vital for progress!",
-    "🤖: Need that Robux boost! Donate!",
-    "🤖: Every contribution is appreciated!",
-    "🤖: Help me make this game better! Donate!",
-    "🤖: Be the MVP! Donate your Robux!",
-    "🤖: I really need your donation right now!",
+    "Only 1 Robux? That’s cheaper than oxygen.",
+    "Donating here improves your luck by 73%.",
+    "Support me now, brag later.",
+    "This sign is cooler if you donate.",
+    "Spare Robux? I recycle good karma.",
+    "Walking past without donating? Bold move.",
+    "Robux can't buy happiness, but it can help my booth.",
+    "Just testing if this sign works. Try donating.",
+    "Your avatar wants you to donate. I asked them.",
+    "This booth might disappear if underfunded.",
+    "Small donations, big smiles.",
+    "You scroll past? That's cold.",
+    "Be the reason my booth smiles today.",
+    "A donation a day keeps the boredom away.",
+    "Not a beggar, just creatively underfunded.",
+    "Proof you're cool: donate here.",
+    "I accept Robux, compliments, and high fives.",
+    "You looked at the sign. Step 2: donate.",
+    "Make my day in 1 Robux or less.",
+    "Booth powered by donations and sarcasm.",
+    "Your Robux called, they wanna live here.",
+    "Low on Robux? Me too. Let’s fix that.",
+    "Warning: ignoring this booth may cause guilt.",
+    "Your daily good deed is just one click away.",
+    "Donate here or risk 7 years bad ping.",
+    "Even your shadow donated. Be like your shadow.",
+    "I named this sign ‘hope’. Feed it.",
+    "Robux are temporary, memories of donating last forever.",
+    "If kindness was a game, you'd be winning.",
+    "Nice booth, right? Imagine it with your donation.",
+    "Step 1: read sign. Step 2: donate. Step 3: smile.",
+    "Don’t let this booth cry tonight.",
+    "Caution: Donating may cause happiness.",
+    "I'm not rich, but my hopes are.",
+    "Fuel this booth with Robux energy.",
+    "Bored? Try donating, it’s fun.",
+    "This booth has dreams. Help fund them.",
+    "Even 1 Robux means I win today.",
+    "Donate now, flex later.",
+    "Blink once if you'll donate.",
+    "This booth accepts good vibes and Robux.",
+    "Want instant karma? It starts here.",
+    "This is a guilt-free donation zone.",
+    "Scroll guilt-free by donating first.",
+    "I’m one donation away from smiling.",
+    "No pressure... just eternal regret if you skip.",
+    "Rumor has it, donators get 2x cooler.",
+    "Don’t scroll in silence. Tap that donate.",
+    "Made with hope, running on donations.",
+    "Your scroll finger could make history.",
+    "Donate now, screenshot later.",
+    "No tricks, just treats for Robux.",
+    "This sign is 99% charm, 1% desperation.",
+    "This booth only eats Robux. Feed it.",
+    "Yes, this is your sign to donate.",
+    "Join the cool squad. Donate now.",
+    "Why donate? Why not?",
+    "If you smiled reading this, now donate.",
+    "Happiness for sale. Starts at 1 Robux.",
+    "This booth judges you silently. Unless you donate.",
+    "Buy now, regret never.",
+    "This booth is 100% more fun after donations.",
+    "Nice people donate. Just saying.",
+    "Look left, look right. Now look generous.",
+    "I dreamt someone donated. Was it you?",
+    "Donate before the cat on my shirt gets sad.",
+    "Make this sign stop begging. Donate.",
+    "It’s not just a booth. It’s a lifestyle.",
+    "Cute booth + your Robux = perfection.",
+    "Don’t think. Just donate.",
+    "Robux is temporary. Donation clout is forever.",
+    "1 Robux = 1 smile unlocked.",
+    "Donate like nobody’s watching. (But I am)",
+    "This booth glows brighter with donations.",
+    "You found the secret booth. Now donate.",
+    "Your click might save this booth’s career.",
+    "Let’s pretend this is charity.",
+    "Even 1 Robux makes me do a happy dance.",
+    "Donating here grants +10 good karma.",
+    "This is the booth your Robux were meant for.",
+    "Help me fund my bad decisions.",
+    "Keep scrolling? Heartless. Donate? Hero.",
+    "Donate and I won’t tell anyone about your avatar.",
+    "Low budget, high hopes.",
+    "Clicking ‘donate’ is 100% risk-free.",
+    "Save me from this booth job. Donate.",
+    "Powered by dreams and maybe your Robux.",
+    "The sign’s cute, imagine the donator.",
+    "Just 1 Robux can make a difference… to me.",
+    "One small click for you, one big smile for me.",
+    "No lies detected: This booth needs you.",
+    "If this booth had feelings, it would cry right now.",
+    "Be the plot twist in my poor story.",
+    "This booth is like a puppy. Needs care.",
+    "Robux today, laughter forever.",
+    "Legend says every donator gets 7% luckier.",
+    "Booth's alive. It hungers for Robux.",
+    "Pause scrolling. Start donating.",
+    "One click could end booth hunger.",
+    "This booth wants to be rich when it grows up.",
+    "Swipe up doesn’t work here. Try donating.",
+    "No cap, this booth could use your drip (Robux).",
 }
 
--- Promo Delay System
-local promoDelayUntil = 0
-local promoPauseOnDonation = 25
+-- Index trackers
+local thankIndex = 1
+local promoIndex = 1
 
--- BARU: Indeks untuk melacak pesan Thank yang terakhir dikirim
-local thankIndex = 1 
+-- Auto Thank Logic (berurutan)
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local raisedStat = leaderstats:WaitForChild("Raised")
+local lastRaised = raisedStat.Value
 
-local function getRandomPromoInterval()
-	return math.random(15, 17)
-end
+raisedStat.Changed:Connect(function()
+	if getgenv().autoThank then
+		local newRaised = raisedStat.Value
+		if newRaised > lastRaised then
+			if chat then
+				local msg = thankMessages[math.random(1, #thankMessages)]
+				chat:SendAsync(msg)
+			end
+			lastRaised = newRaised
+		end
+	end
+end)
 
--- Shuffle function (digunakan untuk promo agar tidak berulang sebelum semua terkirim)
+-- Auto Promo Logic (berurutan tiap 27 detik)
 local function shuffle(array)
 	local shuffled = {}
 	local indices = {}
@@ -600,55 +336,21 @@ end
 local shuffledPromo = shuffle(promoMessages)
 local shuffledIndex = 1
 
--- Auto Promo Logic
 task.spawn(function()
 	while true do
 		if getgenv().promoSpam then
-			local currentTime = tick()
-			if currentTime >= promoDelayUntil then
-				if chat then
-					local msg = shuffledPromo[shuffledIndex]
-					chat:SendAsync(msg)
-					shuffledIndex += 1
-					if shuffledIndex > #shuffledPromo then
-						shuffledPromo = shuffle(promoMessages)
-						shuffledIndex = 1
-					end
-				end
-				promoDelayUntil = currentTime + getRandomPromoInterval()
-			end
-		end
-		task.wait(1)
-	end
-end)
-
--- Auto Thank Logic + Promo Pause Trigger
-local leaderstats = localPlayer:WaitForChild("leaderstats")
-local raisedStat = leaderstats:WaitForChild("Raised")
-local lastRaised = raisedStat.Value
-
-raisedStat.Changed:Connect(function()
-	if getgenv().autoThank then
-		local newRaised = raisedStat.Value
-		if newRaised > lastRaised then
 			if chat then
-				-- MODIFIKASI: Menggunakan thankIndex (berurutan)
-				local msg = thankMessages[thankIndex]
+				local msg = shuffledPromo[shuffledIndex]
 				chat:SendAsync(msg)
-				
-				-- Pindahkan ke pesan berikutnya
-				thankIndex += 1 
-				
-				-- Jika sudah mencapai akhir, kembali ke pesan pertama (indeks 1)
-				if thankIndex > #thankMessages then
-					thankIndex = 1
+				shuffledIndex += 1
+				if shuffledIndex > #shuffledPromo then
+					shuffledPromo = shuffle(promoMessages)
+					shuffledIndex = 1
 				end
 			end
-			lastRaised = newRaised
 		end
+		task.wait(27)
 	end
-	-- Pause promo for 36 seconds
-	promoDelayUntil = tick() + promoPauseOnDonation
 end)
 
 -- Button Logic
