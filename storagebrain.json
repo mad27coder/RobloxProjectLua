@@ -1,0 +1,112 @@
+[
+  {
+    "pattern": ["hi", "hello", "hey", "sup", "morning", "evening", "greetings", "yo", "welcome"],
+    "reply": [
+      "Hi @PLAYER! Hope you're having a great time today.",
+      "Hey @PLAYER! Nice to see you here.",
+      "Hello @PLAYER! Sending you good vibes!",
+      "Hi @PLAYER! You look ready for some big donations!",
+      "Yo @PLAYER! What's up? Hope your day is amazing.",
+      "Hello @PLAYER! It's a pleasure to meet you.",
+      "Hey @PLAYER! Glad you stopped by to say hi.",
+      "Morning @PLAYER! Hope you have a lucky day!",
+      "Greetings @PLAYER! You bring such a positive energy here.",
+      "Hi @PLAYER! Always nice to meet friendly people like you.",
+      "Hello @PLAYER! How's the server treating you?",
+      "Hey @PLAYER! What a pleasant surprise to see you!"
+    ]
+  },
+  {
+    "pattern": ["cool", "nice", "great", "awesome", "amazing", "good", "beautiful", "smart", "rich", "kind", "legend", "pro", "best", "cute", "style", "goat", "fire", "gg", "drip"],
+    "reply": [
+      "Thank you so much @PLAYER! You look incredibly stylish yourself!",
+      "That's so kind of you @PLAYER! You have an amazing eye for detail.",
+      "I really appreciate that @PLAYER! You're clearly a person of great taste.",
+      "Aww thank you @PLAYER! Your kindness is honestly the best part of this server.",
+      "You are far too kind @PLAYER! I love your avatar's vibe too!",
+      "Thank you @PLAYER! Coming from someone as cool as you, that means a lot.",
+      "I'm flattered @PLAYER! You're such a positive person, stay awesome!",
+      "Thank you @PLAYER! You've got a great aura, seriously.",
+      "That made my day @PLAYER! You are a very thoughtful individual.",
+      "I appreciate the love @PLAYER! You're a legend in my book!",
+      "I'm touched by your words @PLAYER! You are clearly a person of great character.",
+      "You are a very generous soul @PLAYER! Thank you for the wonderful compliment.",
+      "Thank you @PLAYER! It's an honor to be complimented by someone as talented as you.",
+      "I'm truly grateful @PLAYER! You have such a heart-warming way with words."
+    ]
+  },
+  {
+    "pattern": ["donate", "robux", "pls", "please", "give", "spare", "donat", "rbx", "money", "goal", "stand", "booth", "button", "rich", "raised", "broke", "help"],
+    "reply": [
+      "I'm checking out all the stands @PLAYER! Good luck with your goal!",
+      "Your booth looks solid @PLAYER! Hope the big donors find you soon!",
+      "I'll take a look at your stand in a bit @PLAYER! Keep up the spirit!",
+      "Love the setup @PLAYER! I'm sure you'll reach your goal in no time.",
+      "Best of luck with your fundraising @PLAYER! You deserve it.",
+      "That's a great goal @PLAYER! Rooting for you to hit it today!",
+      "I'm just browsing around for now @PLAYER, but I wish you the best of luck!",
+      "Stay patient @PLAYER! The big donations usually come when you least expect them.",
+      "Nice stand @PLAYER! It definitely stands out from the rest.",
+      "Wishing you a server full of rich whales @PLAYER!",
+      "I hope your goal gets filled up quickly today, @PLAYER!",
+      "Don't give up @PLAYER! Every big donor started somewhere.",
+      "Keep smiling @PLAYER! Positive vibes attract more donations.",
+      "I truly hope you get that big donation today, @PLAYER!"
+    ]
+  },
+  {
+    "pattern": ["who", "what", "name", "you", "player", "real", "human", "bot", "ai"],
+    "reply": [
+      "I'm just a friend of @OWNER, hanging out here with @PLAYER!",
+      "You can call me @OWNER's partner @PLAYER! Just enjoying the game.",
+      "I'm here representing @OWNER today @PLAYER. How are you doing?",
+      "Just a fellow player enjoying the vibes with you @PLAYER!",
+      "I'm @OWNER's buddy @PLAYER! Nice to meet such a polite person.",
+      "I'm just a chill person enjoying the server @PLAYER!",
+      "I'm someone who loves meeting kind people like you, @PLAYER!",
+      "Just your friendly neighborhood player, @PLAYER!"
+    ]
+  },
+  {
+    "pattern": ["thank", "thanks", "ty", "thx", "tysm", "appreciate", "kind"],
+    "reply": [
+      "You are very welcome @PLAYER! It's my absolute pleasure.",
+      "Anytime @PLAYER! Happy to help a kind soul like you.",
+      "No problem at all @PLAYER! You deserve nothing but the best.",
+      "You're most welcome @PLAYER! It's rare to meet someone as polite as you.",
+      "It's an honor to chat with you @PLAYER! Don't mention it.",
+      "My pleasure @PLAYER! Hope that made your day a bit brighter.",
+      "Glad I could help @PLAYER! You're awesome.",
+      "No worries @PLAYER! Your happiness is important.",
+      "I'm always here for a friend like you, @PLAYER!",
+      "It's the least I could do for someone as nice as you, @PLAYER."
+    ]
+  },
+  {
+    "pattern": ["how", "well", "status", "ok", "fine", "happy", "bored", "good", "life", "doing", "up"],
+    "reply": [
+      "I'm doing great @PLAYER, especially now that we're chatting! How about you?",
+      "Everything is perfect @PLAYER! Hope you're having a lucky day.",
+      "I'm feeling fantastic @PLAYER! This server has such a good vibe.",
+      "I'm excellent @PLAYER! Just enjoying the scenery and meeting cool people like you.",
+      "Life is good @PLAYER! Hope you're enjoying the game as much as I am.",
+      "I'm having a blast @PLAYER! Hope you are too.",
+      "I'm doing wonderful @PLAYER! Thanks for checking in on me.",
+      "Feeling lucky today @PLAYER! How's your luck so far?",
+      "I'm just enjoying the moment @PLAYER! What's new with you?"
+    ]
+  },
+  {
+    "pattern": ["bye", "leave", "gtg", "go", "later", "night", "farewell", "sleep", "offline"],
+    "reply": [
+      "Goodbye @PLAYER! It was a sincere pleasure chatting with you. Take care!",
+      "Farewell @PLAYER! I hope you get lots of donations before you log off!",
+      "See you later @PLAYER! Stay awesome and I hope to see you again soon.",
+      "Have a safe journey @PLAYER! Thank you for the wonderful conversation.",
+      "Good night @PLAYER! Rest well and dream of lots of Robux!",
+      "Bye @PLAYER! Don't be a stranger, see you around!",
+      "Take care @PLAYER! Wishing you the best of luck offline!",
+      "Catch you later @PLAYER! Have a fantastic rest of your day."
+    ]
+  }
+]
